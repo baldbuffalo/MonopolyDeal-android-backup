@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "542262076160",
+    "project_id": "poetic-camp-406715",
+    "storage_bucket": "poetic-camp-406715.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542262076160:android:5609afe48e0b689a1b89e5",
+        "android_client_info": {
+          "package_name": "com.example.monopolydeal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "542262076160-j38bjl81v3el4iuj6nrbdmttftvvua99.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKsLy9w3_46ebdy26bvle45NCzsORUPhA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "542262076160-j38bjl81v3el4iuj6nrbdmttftvvua99.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
