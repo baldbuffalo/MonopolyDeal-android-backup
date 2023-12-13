@@ -70,9 +70,6 @@ android {
     }
 
     dependencies {
-
-        //noinspection UseTomlInstead
-        implementation("com.android.tools.build:gradle:8.3.0-alpha17")
         //noinspection UseTomlInstead
         implementation ("com.google.firebase:firebase-auth:22.3.0")
         //noinspection UseTomlInstead
