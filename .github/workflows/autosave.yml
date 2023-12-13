@@ -1,0 +1,22 @@
+name: Auto Save
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  autosave:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config user.name "baldbuffalo"
+          git config user.email "rishijivani28@gmail.com"
+
+      - name: Run Autosave Script
+        run: ./git_autosave.sh
