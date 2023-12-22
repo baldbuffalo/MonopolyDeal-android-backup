@@ -8,12 +8,14 @@ import android.widget.ImageButton
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.tasks.Task
 
 class MainMenu : AppCompatActivity() {
 
@@ -35,21 +37,29 @@ class MainMenu : AppCompatActivity() {
 
         configureGoogleSignIn()
 
-        // Check if the user is already signed in
-        val account = GoogleSignIn.getLastSignedInAccount(this)
+        // Check if Google services are available on the device
+        val googleApiAvailability = GoogleApiAvailability.getInstance()
+        if (googleApiAvailability.isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) {
+            // Check if the user is already signed in
+            val account = GoogleSignIn.getLastSignedInAccount(this)
 
-        if (account != null) {
-            // User is already signed in, proceed to the main activity
-            navigateToMainActivity(account)
-        }
-
-        startForResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            // Handle the result in the callback
-            val data = result.data
-            if (result.resultCode == RESULT_OK && data != null) {
-                val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-                handleGoogleSignInResult(signInResult)
+            if (account != null) {
+                // User is already signed in, proceed to the main activity
+                navigateToMainActivity(account)
             }
+
+            startForResultLauncher =
+                registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                    // Handle the result in the callback
+                    val data = result.data
+                    if (result.resultCode == RESULT_OK && data != null) {
+                        val signInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
+                        handleGoogleSignInResult(signInAccountTask)
+                    }
+                }
+        } else {
+            // Show a message or take appropriate action if Google services are not available
+            Log.e("GoogleServices", "Google services are not available on this device.")
         }
     }
 
@@ -83,15 +93,14 @@ class MainMenu : AppCompatActivity() {
         finish()
     }
 
-    private fun handleGoogleSignInResult(result: GoogleSignInResult?) {
-        if (result?.isSuccess == true) {
+    private fun handleGoogleSignInResult(signInAccountTask: Task<GoogleSignInAccount>) {
+        try {
+            val account = signInAccountTask.getResult(ApiException::class.java)
             // Signed in successfully, navigate to the main activity
-            val account = result.signInAccount
             navigateToMainActivity(account!!)
-        } else {
+        } catch (e: ApiException) {
             // Handle sign-in failure
-            val errorMessage = result?.status?.statusMessage ?: "Unknown error"
-            Log.e("SignInFailure", errorMessage)
+            Log.e("SignInFailure", "Google sign-in failed: ${e.statusCode}")
             // Show failure dialog or take appropriate action
         }
     }

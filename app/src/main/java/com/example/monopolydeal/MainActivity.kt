@@ -118,14 +118,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.google_web_client_id))
-            .requestEmail()
-            .build()
+        if (!isFinishing) {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.google_web_client_id))
+                .requestEmail()
+                .build()
 
-        val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
-        val signInIntent: Intent = mGoogleSignInClient.signInIntent
-        startForResult.launch(signInIntent) // Launch using ActivityResultLauncher
+            val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+            val signInIntent: Intent = mGoogleSignInClient.signInIntent
+            startForResult.launch(signInIntent) // Launch using ActivityResultLauncher
+        }
     }
 
     private fun handleGoogleSignInResult(data: Intent?) {
@@ -171,13 +173,13 @@ class MainActivity : AppCompatActivity() {
     private fun drawCard() {
         // Add logic to handle drawing a card
         val drawnCard = game.drawCard()
-        showToast("Drew a ${drawnCard.first} with value ${drawnCard.second}")
+        showToast("Drew a ${drawnCard.type} with value ${drawnCard.value}")
     }
 
     private fun playCard() {
         // Implement logic to get the card to play (for example, from the player's hand)
         val playerHand = game.getPlayerHand()
-        val cardToPlay: Pair<String, Int>? = playerHand.firstOrNull() // Placeholder, replace with actual logic
+        val cardToPlay: Card? = playerHand.firstOrNull() // Placeholder, replace with actual logic
 
         if (cardToPlay != null) {
             // Call the playCard function with the selected card
@@ -185,7 +187,7 @@ class MainActivity : AppCompatActivity() {
 
             // Display a message based on whether the card was played successfully
             if (success) {
-                showToast("Played a ${cardToPlay.first} with value ${cardToPlay.second}")
+                showToast("Played a ${cardToPlay.type} with value ${cardToPlay.value}")
             } else {
                 showToast("Could not play the selected card")
             }
@@ -216,9 +218,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addFriend() {
-        val newFriend = "Friend ${friendsList.size + 1}"
-        friendsRef.child(newFriend).setValue(true) // Add friend to Firebase Realtime Database
-        showToast("$newFriend added to friends list")
+        // Check if friendsRef is initialized
+        if (::friendsRef.isInitialized) {
+            val newFriend = "Friend ${friendsList.size + 1}"
+            friendsRef.child(newFriend).setValue(true) // Add friend to Firebase Realtime Database
+            showToast("$newFriend added to friends list")
+        } else {
+            showToast("Friends list not initialized. Please sign in first.")
+        }
     }
 
     override fun onDestroy() {

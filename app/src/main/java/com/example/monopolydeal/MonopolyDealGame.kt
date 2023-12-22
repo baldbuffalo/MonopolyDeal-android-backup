@@ -1,22 +1,24 @@
 // MonopolyDealGame.kt
 package com.example.monopolydeal
 
-class  MonopolyDealGame {
-    private val playerHand = mutableListOf<Pair<String, Int>>()
+data class Card(val type: String, val value: Int)
 
-    fun drawCard(): Pair<String, Int> {
+class MonopolyDealGame {
+    private val playerHand = mutableListOf<Card>()
+
+    fun drawCard(): Card {
         // Simplified logic to draw a card
-        val drawnCard = Pair("Property", 100)
+        val drawnCard = Card("Property", 100)
         playerHand.add(drawnCard)
         return drawnCard
     }
 
-    fun getPlayerHand(): List<Pair<String, Int>> {
+    fun getPlayerHand(): List<Card> {
         // Return the player's hand
         return playerHand.toList()
     }
 
-    fun playCard(card: Pair<String, Int>): Boolean {
+    fun playCard(card: Card): Boolean {
         // Simplified logic to play a card
         if (playerHand.contains(card)) {
             playerHand.remove(card)

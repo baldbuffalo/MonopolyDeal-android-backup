@@ -70,12 +70,15 @@ android {
     }
 
     dependencies {
+
+        //noinspection UseTomlInstead
+        implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
         //noinspection UseTomlInstead
         implementation ("com.google.firebase:firebase-auth:22.3.0")
         //noinspection UseTomlInstead
         implementation ("com.google.firebase:firebase-database:20.3.0")
         //noinspection UseTomlInstead
-        implementation ("androidx.databinding:databinding-runtime:8.3.0-alpha17")
+        implementation ("androidx.databinding:databinding-runtime:8.3.0-alpha18")
        //noinspection UseTomlInstead
         implementation ("com.google.android.gms:play-services-auth:20.7.0")
         //noinspection UseTomlInstead
@@ -101,7 +104,4 @@ android {
         debugImplementation(libs.androidx.ui.tooling)
         debugImplementation(libs.androidx.ui.test.manifest)
     }
-}
-dependencies {
-    implementation(libs.play.services.tagmanager.v4.impl)
 }

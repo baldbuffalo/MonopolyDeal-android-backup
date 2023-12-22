@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "542262076160-o3pur4qn8055ngqsra2gt2cufuq7d5m0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.monopolydeal",
+            "certificate_hash": "16934a0eb6de0bd82e62d3c0428758c2c9ef464b"
+          }
+        },
+        {
           "client_id": "542262076160-j38bjl81v3el4iuj6nrbdmttftvvua99.apps.googleusercontent.com",
           "client_type": 3
         }
