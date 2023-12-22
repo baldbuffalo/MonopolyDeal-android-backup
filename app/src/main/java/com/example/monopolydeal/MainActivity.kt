@@ -117,19 +117,6 @@ class MainActivity : AppCompatActivity() {
         finish() // Close the current activity
     }
 
-    private fun signInWithGoogle() {
-        if (!isFinishing) {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.google_web_client_id))
-                .requestEmail()
-                .build()
-
-            val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
-            val signInIntent: Intent = mGoogleSignInClient.signInIntent
-            startForResult.launch(signInIntent) // Launch using ActivityResultLauncher
-        }
-    }
-
     private fun handleGoogleSignInResult(data: Intent?) {
         val task = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {

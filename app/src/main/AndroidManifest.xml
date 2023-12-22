@@ -18,7 +18,9 @@
         <activity
             android:name=".MainMenu"
             android:exported="true"
-            android:theme="@style/AppTheme">
+            android:screenOrientation="fullSensor"
+            android:theme="@style/AppTheme"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
