@@ -55,6 +55,9 @@ class MainMenu : AppCompatActivity() {
                     if (result.resultCode == RESULT_OK && data != null) {
                         val signInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
                         handleGoogleSignInResult(signInAccountTask)
+                    } else {
+                        // User canceled the sign-in process
+                        Log.w("GoogleSignIn", "Sign-in process canceled by the user")
                     }
                 }
         } else {
@@ -84,7 +87,7 @@ class MainMenu : AppCompatActivity() {
     }
 
     private fun navigateToMainActivity(account: GoogleSignInAccount) {
-        // Start the com.example.monopolydeal.com.example.monopolydeal.com.example.monopolydeal.MainActivity
+        // Start the MainActivity
         val intent = Intent(this, MainActivity::class.java)
         intent.putExtra("googleIdToken", account.idToken)
         startActivity(intent)
