@@ -8,14 +8,13 @@ import android.widget.ImageButton
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.tasks.Task
+import com.google.android.gms.common.api.ApiException
 
 class MainMenu : AppCompatActivity() {
 
@@ -46,6 +45,7 @@ class MainMenu : AppCompatActivity() {
             if (account != null) {
                 // User is already signed in, proceed to the main activity
                 navigateToMainActivity(account)
+                return // Make sure to return to avoid executing the rest of the onCreate logic
             }
 
             startForResultLauncher =
@@ -53,8 +53,7 @@ class MainMenu : AppCompatActivity() {
                     // Handle the result in the callback
                     val data = result.data
                     if (result.resultCode == RESULT_OK && data != null) {
-                        val signInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
-                        handleGoogleSignInResult(signInAccountTask)
+                        handleSignInResult(data)
                     } else {
                         // User canceled the sign-in process
                         Log.w("GoogleSignIn", "Sign-in process canceled by the user")
@@ -96,7 +95,8 @@ class MainMenu : AppCompatActivity() {
         finish()
     }
 
-    private fun handleGoogleSignInResult(signInAccountTask: Task<GoogleSignInAccount>) {
+    private fun handleSignInResult(data: Intent) {
+        val signInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {
             val account = signInAccountTask.getResult(ApiException::class.java)
             // Signed in successfully, navigate to the main activity
