@@ -59,13 +59,14 @@ class MainActivity : AppCompatActivity() {
             binding.playCardButton.setOnClickListener { playCard() }
             setUpUsernameButton()
             setUpFriendButton()
-        }
-
-        // Set up ActivityResultLauncher
-        startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                // Handle the result of the Google Sign-In
-                handleGoogleSignInResult(result.data)
+        } else {
+            // User is signed in, proceed with the rest of the initialization
+            // Set up ActivityResultLauncher
+            startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    // Handle the result of the Google Sign-In
+                    handleGoogleSignInResult(result.data)
+                }
             }
         }
     }
