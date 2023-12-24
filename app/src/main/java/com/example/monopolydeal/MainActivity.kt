@@ -47,10 +47,7 @@ class MainActivity : AppCompatActivity() {
         // Check if the user is signed in
         currentUser = auth.currentUser
 
-        if (currentUser != null) {
-            // User is signed in, navigate to MainActivity
-            navigateToMainActivity()
-        } else {
+        if (currentUser == null) {
             // User is not signed in, navigate to MainMenu
             navigateToMainMenu()
 
@@ -107,12 +104,6 @@ class MainActivity : AppCompatActivity() {
         popupMenu.show()
     }
 
-    private fun navigateToMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
-        finish() // Close the current activity
-    }
-
     private fun navigateToMainMenu() {
         val intent = Intent(this, MainMenu::class.java)
         startActivity(intent)
@@ -139,7 +130,6 @@ class MainActivity : AppCompatActivity() {
                     // Sign in success, update UI with the signed-in user's information
                     currentUser = auth.currentUser
                     showToast("Google Sign-In successful")
-                    navigateToMainActivity()
                 } else {
                     // If sign in fails, display a message to the user.
                     showToast("Authentication failed: ${task.exception?.message}")
