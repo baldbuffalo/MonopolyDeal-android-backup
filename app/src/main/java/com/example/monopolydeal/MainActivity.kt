@@ -2,7 +2,6 @@ package com.example.monopolydeal
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -29,7 +28,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private var currentUser: FirebaseUser? = null
-    private lateinit var database: FirebaseDatabase
     private lateinit var friendsRef: DatabaseReference
 
     private val friendsList = mutableListOf<String>()
@@ -51,33 +49,32 @@ class MainActivity : AppCompatActivity() {
         if (currentUser == null) {
             // User is not signed in, navigate to MainMenu
             navigateToMainMenu()
-
-            // Initialize Monopoly Deal game components
-            game = MonopolyDealGame()
-
-            // Example: Set up button click listeners
-            binding.drawCardButton.setOnClickListener { drawCard() }
-            binding.playCardButton.setOnClickListener { playCard() }
-            setUpUsernameButton()
-            setUpFriendButton()
         } else {
             // User is signed in, proceed with the rest of the initialization
-            // Set up ActivityResultLauncher
-            startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    // Handle the result of the Google Sign-In
-                    handleGoogleSignInResult(result.data)
-                }
-            }
-
-            // Log a message
-            Log.d("Navigation", "User is already signed in. Navigating to MainActivity")
-
-            // Start MainActivity
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish() // Optional: Finish the current activity if needed
+            initializeFirebaseComponents()
         }
+    }
+
+    private fun initializeFirebaseComponents() {
+        // Set up ActivityResultLauncher
+        startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // Handle the result of the Google Sign-In
+                handleGoogleSignInResult(result.data)
+            }
+        }
+
+        // Optionally, you can start MainActivity directly after a successful sign-in
+        startMainActivity()
+
+        // Initialize Monopoly Deal game components
+        game = MonopolyDealGame()
+
+        // Example: Set up button click listeners
+        binding.drawCardButton.setOnClickListener { drawCard() }
+        binding.playCardButton.setOnClickListener { playCard() }
+        setUpUsernameButton()
+        setUpFriendButton()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -140,11 +137,19 @@ class MainActivity : AppCompatActivity() {
                     // Sign in success, update UI with the signed-in user's information
                     currentUser = auth.currentUser
                     showToast("Google Sign-In successful")
+                    // Start MainActivity
+                    startMainActivity()
                 } else {
                     // If sign in fails, display a message to the user.
                     showToast("Authentication failed: ${task.exception?.message}")
                 }
             }
+    }
+
+    private fun startMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish() // Optional: Finish the current activity if needed
     }
 
     private fun showToast(message: String) {

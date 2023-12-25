@@ -1,6 +1,9 @@
+// MainMenu.kt
 package com.example.monopolydeal
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -54,9 +57,17 @@ class MainMenu : AppCompatActivity() {
                     val data = result.data
                     if (result.resultCode == RESULT_OK && data != null) {
                         handleSignInResult(data)
+                        // Set the signed-in status in SharedPreferences to 1
+                        setSignInStatus(1)
+                        // Log the status value
+                        Log.d("SignInStatus", "Value set to 1")
                     } else {
-                        // User canceled the sign-in process
-                        Log.w("GoogleSignIn", "Sign-in process canceled by the user")
+                        // User canceled the sign-in process or signed out
+                        Log.w("GoogleSignIn", "Sign-in process canceled or user signed out")
+                        // Set the signed-in status in SharedPreferences to 0
+                        setSignInStatus(0)
+                        // Log the status value
+                        Log.d("SignInStatus", "Value set to 0")
                     }
                 }
         } else {
@@ -105,6 +116,15 @@ class MainMenu : AppCompatActivity() {
             // Handle sign-in failure
             Log.e("SignInFailure", "Google sign-in failed: ${e.statusCode}")
             // Show failure dialog or take appropriate action
+        }
+    }
+
+    private fun setSignInStatus(status: Int) {
+        // Save the sign-in status in SharedPreferences
+        val sharedPref: SharedPreferences = getPreferences(Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putInt("sign_in_status", status)
+            apply()
         }
     }
 }
