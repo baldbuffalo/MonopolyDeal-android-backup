@@ -19,7 +19,7 @@
 
         <!-- Define LoadingScreen as the launcher activity -->
         <activity
-            android:name=".LoadingScreen"
+            android:name=".com.example.monopolydeal.LoadingScreen"
             android:exported="true"
             android:theme="@style/AppTheme">
             <intent-filter>
