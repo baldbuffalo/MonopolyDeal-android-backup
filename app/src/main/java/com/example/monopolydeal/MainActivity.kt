@@ -2,6 +2,7 @@ package com.example.monopolydeal
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -68,6 +69,14 @@ class MainActivity : AppCompatActivity() {
                     handleGoogleSignInResult(result.data)
                 }
             }
+
+            // Log a message
+            Log.d("Navigation", "User is already signed in. Navigating to MainActivity")
+
+            // Start MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish() // Optional: Finish the current activity if needed
         }
     }
 
