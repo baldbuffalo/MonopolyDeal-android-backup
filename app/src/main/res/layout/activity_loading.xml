@@ -10,7 +10,7 @@
         android:layout_height="8dp"
         android:layout_centerInParent="true"
         style="?android:attr/progressBarStyleHorizontal"
-        android:progressTint="@android:color/holo_green_light"
+        android:progressTint="@android:color/dark_green"
         android:visibility="visible" />
 
     <TextView
