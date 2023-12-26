@@ -11,4 +11,5 @@
     <string name="add_friend">Add Friend</string>
     <string name="google_sign_in_description">Google Sign-In Button</string>
     <string name="logout">Logout</string>
+    <string name="checking_for_updates">Checking for updates…</string>
 </resources>

@@ -70,7 +70,8 @@ android {
     }
 
     dependencies {
-
+        //noinspection UseTomlInstead
+        implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
         //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
         //noinspection UseTomlInstead
