@@ -1,9 +1,6 @@
 package com.example.monopolydeal
 
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -25,8 +22,7 @@ class LoadingScreen : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
 
     // Updated GitHub repository URL
-    private val githubRepoUrl =
-        "https://api.github.com/repos/baldbuffalo/MonopolyDeal-android-backup/releases/latest"
+    private val githubRepoUrl = "https://api.github.com/repos/baldbuffalo/MonopolyDeal-android-backup/releases/latest"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,11 +84,7 @@ class LoadingScreen : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 // Handle failure
                 runOnUiThread {
-                    Toast.makeText(
-                        this@LoadingScreen,
-                        "Failed to check for updates",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this@LoadingScreen, "Failed to check for updates", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -102,18 +94,29 @@ class LoadingScreen : AppCompatActivity() {
                         val jsonData = it.string()
                         val json = JSONObject(jsonData)
 
-                        val tagName = json.getString("tag_name")
-                        val latestVersion = tagName.substring(1) // Assuming tag_name is like "v1.2.3"
+                        // Check if the "tag_name" key exists in the JSON response
+                        if (json.has("tag_name")) {
+                            val tagName = json.getString("tag_name")
+                            val latestVersion = tagName.substring(1) // Assuming tag_name is like "v1.2.3"
 
-                        // Compare with the current version installed on the device
-                        if (isNewerVersionAvailable(latestVersion)) {
-                            // Prompt the user to download the update
+                            // Compare with the current version installed on the device
+                            if (isNewerVersionAvailable(latestVersion)) {
+                                // Prompt the user to download the update
+                                runOnUiThread {
+                                    showUpdatePrompt()
+                                }
+                            }
+                        } else {
+                            // Handle the case where "tag_name" key is not present in the JSON response
                             runOnUiThread {
-                                showUpdatePrompt()
+                                Toast.makeText(this@LoadingScreen, "Invalid JSON response", Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
+                        runOnUiThread {
+                            Toast.makeText(this@LoadingScreen, "Error parsing JSON response", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -121,51 +124,20 @@ class LoadingScreen : AppCompatActivity() {
     }
 
     private fun isNewerVersionAvailable(latestVersion: String): Boolean {
-        val installedVersion = getVersionCode(this)
+        // Get the version code of the installed app
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val installedVersionCode = packageInfo.versionCode
 
-        // Compare the latest version with the installed version
-        return if (installedVersion != -1L) {
-            // Parse the version strings and compare them
-            val latestVersionCode = parseVersionCode(latestVersion)
-            installedVersion < latestVersionCode
-        } else {
-            // Unable to determine the installed version, default to true
-            true
-        }
-    }
+        // Convert the latest version string to an integer
+        val latestVersionCode = latestVersion.toIntOrNull()
 
-    private fun getVersionCode(context: Context): Long {
-        try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                packageInfo.longVersionCode
-            } else {
-                @Suppress("DEPRECATION")
-                packageInfo.versionCode.toLong()
-            }
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-        }
-        return -1
-    }
-
-    private fun parseVersionCode(version: String): Long {
-        // Implement your logic to parse the version string and return the version code
-        // For simplicity, let's assume the version string is in the format "X.Y.Z"
-        val parts = version.split(".")
-        if (parts.size >= 3) {
-            return (parts[0].toLong() * 100 + parts[1].toLong() * 10 + parts[2].toLong())
-        }
-        return -1
+        // Compare version codes
+        return latestVersionCode != null && latestVersionCode > installedVersionCode
     }
 
     private fun showUpdatePrompt() {
         // Implement the update prompt logic
         // For example, show a dialog or notification to prompt the user to download the update
-        Toast.makeText(
-            this,
-            "A new version is available. Please update the app.",
-            Toast.LENGTH_SHORT
-        ).show()
+        Toast.makeText(this, "A new version is available. Please update the app.", Toast.LENGTH_SHORT).show()
     }
 }
