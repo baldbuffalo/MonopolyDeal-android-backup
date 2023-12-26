@@ -2,9 +2,8 @@
 <!-- res/values/styles.xml -->
 <resources>
 
-    <style name="LoadingTheme" parent="Theme.AppCompat">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowIsTranslucent">true</item>
+    <style name="LoadingTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@android:color/holo_red_light</item>
     </style>
 
     <!-- Base application theme -->
@@ -15,7 +14,6 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
-
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>

@@ -7,7 +7,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.PopupMenu
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.monopolydeal.databinding.ActivityMainBinding
@@ -33,7 +32,13 @@ class MainActivity : AppCompatActivity() {
     private val friendsList = mutableListOf<String>()
     private var isActivityDestroyed = false
 
-    private lateinit var startForResult: ActivityResultLauncher<Intent>
+    private val startForResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // Handle the result of the Google Sign-In
+                handleGoogleSignInResult(result.data)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,14 +61,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeFirebaseComponents() {
-        // Set up ActivityResultLauncher
-        startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                // Handle the result of the Google Sign-In
-                handleGoogleSignInResult(result.data)
-            }
-        }
-
         // Optionally, you can start MainActivity directly after a successful sign-in
         startMainActivity()
 
@@ -77,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         setUpFriendButton()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.username_menu, menu)
         return true
     }
@@ -118,10 +115,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleGoogleSignInResult(data: Intent?) {
-        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {
             // Google Sign-In was successful, authenticate with Firebase
-            val account = task.getResult(ApiException::class.java)
+            val account =
+                GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)
             firebaseAuthWithGoogle(account?.idToken)
         } catch (e: ApiException) {
             // Google Sign-In failed
