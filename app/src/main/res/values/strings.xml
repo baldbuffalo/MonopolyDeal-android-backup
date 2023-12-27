@@ -13,5 +13,7 @@
     <string name="logout">Logout</string>
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="checking_user_status">Checking user status…</string>
+    <string name="update_check_complete">Update check complete</string>
+    <string name="up_to_date">Up to date</string>
     <string name="loading">Loading…</string>
 </resources>
