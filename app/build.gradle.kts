@@ -1,8 +1,8 @@
 plugins {
-    id ("com.android.application")
-    id ("kotlin-android")
-    id ("com.google.gms.google-services")
-    id ("kotlin-kapt")
+    id("com.android.application")
+    id("kotlin-android")
+    id("com.google.gms.google-services")
+    id("kotlin-kapt")
 }
 
 object Libs {
@@ -12,9 +12,9 @@ object Libs {
 }
 
 android {
-
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     namespace = "com.example.monopolydeal"
@@ -41,21 +41,29 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }
-    buildFeatures {
-        compose = true
-    }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.5"
     }
-    packaging {
+
+    packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "xsd/catalog.xml"
@@ -70,21 +78,13 @@ android {
     }
 
     dependencies {
-        //noinspection UseTomlInstead
         implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
-        //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
-        //noinspection UseTomlInstead
-        implementation ("com.google.firebase:firebase-auth:22.3.0")
-        //noinspection UseTomlInstead
-        implementation ("com.google.firebase:firebase-database:20.3.0")
-        //noinspection UseTomlInstead
-        implementation ("androidx.databinding:databinding-runtime:8.3.0-alpha18")
-       //noinspection UseTomlInstead
-        implementation ("com.google.android.gms:play-services-auth:20.7.0")
-        //noinspection UseTomlInstead
+        implementation("com.google.firebase:firebase-auth:22.3.0")
+        implementation("com.google.firebase:firebase-database:20.3.0")
+        implementation("androidx.databinding:databinding-runtime:8.3.0-alpha18")
+        implementation("com.google.android.gms:play-services-auth:20.7.0")
         implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-        //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-analytics")
         implementation(Libs.PLAY_SERVICES_AUTH)
         implementation(Libs.ANDROIDX_APPCOMPAT)
