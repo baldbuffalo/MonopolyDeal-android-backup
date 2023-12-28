@@ -22,10 +22,10 @@ android {
 
     defaultConfig {
         applicationId = "com.example.monopolydeal"
-        minSdk = 28
+        minSdk = 30
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -63,7 +63,7 @@ android {
         kotlinCompilerExtensionVersion = "1.5.5"
     }
 
-    packagingOptions {
+    packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "xsd/catalog.xml"
@@ -78,13 +78,23 @@ android {
     }
 
     dependencies {
+        //noinspection UseTomlInstead
+        implementation ("com.google.code.gson:gson:2.10.1")
+        //noinspection UseTomlInstead
         implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
+        //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
+        //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-auth:22.3.0")
+        //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-database:20.3.0")
-        implementation("androidx.databinding:databinding-runtime:8.3.0-alpha18")
+        //noinspection UseTomlInstead
+        implementation("androidx.databinding:databinding-runtime:8.3.0-beta01")
+        //noinspection UseTomlInstead
         implementation("com.google.android.gms:play-services-auth:20.7.0")
+        //noinspection UseTomlInstead
         implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+        //noinspection UseTomlInstead
         implementation("com.google.firebase:firebase-analytics")
         implementation(Libs.PLAY_SERVICES_AUTH)
         implementation(Libs.ANDROIDX_APPCOMPAT)

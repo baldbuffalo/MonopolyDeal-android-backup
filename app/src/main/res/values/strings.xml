@@ -14,6 +14,14 @@
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="checking_user_status">Checking user status…</string>
     <string name="update_check_complete">Update check complete</string>
-    <string name="up_to_date">Up to date</string>
+    <string name="checking_for_updates_progress">Checking for updates: %1$d%%</string>
+    <string name="new_version_available">A new version of the app is available. Do you want to download it?</string>
+    <string name="app_up_to_date">App is up to date</string>
     <string name="loading">Loading…</string>
+    <string name="download">Download</string>
+    <string name="cancel">Cancel</string>
+    <string name="new_version_available_title">New Version Available</string>
+    <string name="new_version_available_message">A new version of the app is available. Do you want to download it?</string>
+    <string name="app_updating">Updating…</string>
+    <string name="checking_for_updates_error">Error checking for updates</string>
 </resources>
