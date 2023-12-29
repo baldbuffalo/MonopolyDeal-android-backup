@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.monopolydeal"
-        minSdk = 30
+        minSdk = 27
         targetSdk = 34
         versionCode = 1
         versionName = "1"

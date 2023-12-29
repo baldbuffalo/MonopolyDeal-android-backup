@@ -2,9 +2,9 @@ package com.example.monopolydeal
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.app.DownloadManager
 import android.content.Context
 import android.content.DialogInterface
-import android.app.DownloadManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -24,9 +24,10 @@ import java.util.concurrent.Executors
 
 class LoadingScreen : AppCompatActivity() {
 
-    private val loadingDuration: Long = 2000
+    private val loadingDuration: Long = 5000  // 5 seconds
     private val executor = Executors.newSingleThreadExecutor()
-    private val githubApiUrl = "https://api.github.com/repos/baldbuffalo/MonopolyDeal-android-backup/releases"
+    private val githubApiUrl = "https://github.com/baldbuffalo/MonopolyDeal-android-backup/releases"
+    private var updateRequired = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,19 +82,41 @@ class LoadingScreen : AppCompatActivity() {
                         progressBar.visibility = View.GONE
                         progressText.visibility = View.GONE
 
-                        // Stay on the loading screen for an additional 2 seconds
-                        progressHandler.postDelayed({
-                            // Check for updates has finished, and the progress bar is complete.
-                            // Proceed to the main menu.
-                            navigateToMainMenu()
-                        }, 2000)
+                        // Check if an update is required
+                        if (updateRequired) {
+                            // Display a custom popup indicating that an update is required
+                            showCustomPopup("Update required. Please update the app.")
+                        } else {
+                            // Stay on the loading screen for an additional 2 seconds
+                            progressHandler.postDelayed({
+                                // Check for updates has finished, and the progress bar is complete.
+                                // Proceed to the main menu.
+                                navigateToMainMenu()
+                            }, 2000)
+                        }
                     }
                 }
             }, loadingDuration / (progressBar.max / 5))
         }
     }
 
+    private fun showCustomPopup(message: String) {
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder.setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                // You can add any logic you need after the user clicks OK
+                finish()
+            }
+
+        val alert = dialogBuilder.create()
+        alert.setTitle("Alert")
+        alert.show()
+    }
+
     private fun showUpdatePrompt(apiUrl: String) {
+        updateRequired = true
         val dialogFragment = UpdatePromptDialogFragment.newInstance(apiUrl)
         dialogFragment.show(supportFragmentManager, "update_prompt")
     }
@@ -183,10 +206,10 @@ class LoadingScreen : AppCompatActivity() {
                 .setTitle("New Version Available")
                 .setMessage("A new version of the app is available. Do you want to download it?")
                 .setPositiveButton("Download") { _, _ ->
-                    (activity as? LoadingScreen)?.initiateDownload(apiUrl)
+                    (requireActivity() as? LoadingScreen)?.initiateDownload(apiUrl)
                 }
                 .setNegativeButton("Cancel") { _, _ ->
-                    (activity as? LoadingScreen)?.navigateToMainMenu()
+                    (requireActivity() as? LoadingScreen)?.navigateToMainMenu()
                 }
                 .create()
         }
@@ -196,13 +219,77 @@ class LoadingScreen : AppCompatActivity() {
         val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val downloadUri = Uri.parse(apiUrl)
         val request = DownloadManager.Request(downloadUri)
+
         // Set up download request properties
+        request.setTitle("Monopoly Deal Update")
+        request.setDescription("Downloading the latest version of Monopoly Deal")
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+        // Set the download destination
+        val fileName = "MonopolyDeal.apk"
+        request.setDestinationInExternalFilesDir(
+            this,
+            // Specify the destination folder, you can change
+            getExternalFilesDir(null)?.absolutePath,
+            fileName
+        )
 
         val downloadId = downloadManager.enqueue(request)
         pollDownloadStatus(downloadManager, downloadId)
     }
 
     private fun pollDownloadStatus(downloadManager: DownloadManager, downloadId: Long) {
-        // ... (your existing pollDownloadStatus function)
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        val handler = Handler(Looper.getMainLooper())
+
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                val cursor = downloadManager.query(query)
+                if (cursor.moveToFirst()) {
+                    val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                    if (columnIndex != -1) {
+                        val status = cursor.getInt(columnIndex)
+                        when (status) {
+                            DownloadManager.STATUS_SUCCESSFUL -> {
+                                // Download completed successfully, install the APK
+                                installApk(cursor)
+                            }
+                            DownloadManager.STATUS_FAILED -> {
+                                // Download failed, proceed to the main menu or any other logic
+                                (this@LoadingScreen)?.navigateToMainMenu()
+                            }
+                            else -> {
+                                // Continue polling until the download is complete
+                                handler.postDelayed(this, 1000)
+                            }
+                        }
+                    } else {
+                        // Handle the case where the column index is -1
+                        (this@LoadingScreen)?.navigateToMainMenu()
+                    }
+                }
+                cursor.close()
+            }
+        }, 1000)
+    }
+
+    private fun installApk(cursor: android.database.Cursor) {
+        // Get the local URI of the downloaded APK
+        val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+        if (columnIndex != -1) {
+            val localUri = cursor.getString(columnIndex)
+            val uri = Uri.parse(localUri)
+
+            // Create an Intent to install the APK
+            val installIntent = Intent(Intent.ACTION_VIEW)
+            installIntent.setDataAndType(uri, "application/vnd.android.package-archive")
+            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            // Start the installation
+            startActivity(installIntent)
+        }
+
+        // Finish the loading screen activity
+        finish()
     }
 }
