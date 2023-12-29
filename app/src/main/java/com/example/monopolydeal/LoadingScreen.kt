@@ -56,13 +56,13 @@ class LoadingScreen : AppCompatActivity() {
                         // The app is up to date, update the progress text
                         progressText.text = getString(R.string.app_up_to_date)
                         // Proceed to the main menu or any other logic
-                        navigateToMainMenu()
+                        navigateToMainScreen()
                         return@runOnUiThread
                     }
                 }
                 progressText.text = getString(R.string.checking_for_updates_error)
                 // Proceed to the main menu or any other logic
-                navigateToMainMenu()
+                navigateToMainScreen()
                 return@runOnUiThread
             }
 
@@ -91,7 +91,7 @@ class LoadingScreen : AppCompatActivity() {
                             progressHandler.postDelayed({
                                 // Check for updates has finished, and the progress bar is complete.
                                 // Proceed to the main menu.
-                                navigateToMainMenu()
+                                navigateToMainScreen()
                             }, 2000)
                         }
                     }
@@ -121,7 +121,7 @@ class LoadingScreen : AppCompatActivity() {
         dialogFragment.show(supportFragmentManager, "update_prompt")
     }
 
-    private fun navigateToMainMenu() {
+    private fun navigateToMainScreen() {
         val mainMenuIntent = Intent(this, MainMenu::class.java)
         startActivity(mainMenuIntent)
         finish()
@@ -209,7 +209,7 @@ class LoadingScreen : AppCompatActivity() {
                     (requireActivity() as? LoadingScreen)?.initiateDownload(apiUrl)
                 }
                 .setNegativeButton("Cancel") { _, _ ->
-                    (requireActivity() as? LoadingScreen)?.navigateToMainMenu()
+                    (requireActivity() as? LoadingScreen)?.navigateToMainScreen()
                 }
                 .create()
         }
@@ -256,7 +256,7 @@ class LoadingScreen : AppCompatActivity() {
                             }
                             DownloadManager.STATUS_FAILED -> {
                                 // Download failed, proceed to the main menu or any other logic
-                                (this@LoadingScreen)?.navigateToMainMenu()
+                                navigateToMainScreen()
                             }
                             else -> {
                                 // Continue polling until the download is complete
@@ -265,7 +265,7 @@ class LoadingScreen : AppCompatActivity() {
                         }
                     } else {
                         // Handle the case where the column index is -1
-                        (this@LoadingScreen)?.navigateToMainMenu()
+                        navigateToMainScreen()
                     }
                 }
                 cursor.close()
