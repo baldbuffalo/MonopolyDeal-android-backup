@@ -144,9 +144,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
-        finish() // Optional: Finish the current activity if needed
+        // Add logic to show activity_main.xml layout
+        // For now, showToast is used as a placeholder. Adjust based on your actual implementation.
+        showToast("MainActivity is shown with activity_main.xml")
     }
 
     private fun showToast(message: String) {

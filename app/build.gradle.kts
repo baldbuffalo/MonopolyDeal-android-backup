@@ -5,6 +5,7 @@ plugins {
     id("kotlin-kapt")
 }
 
+
 object Libs {
     const val ANDROIDX_APPCOMPAT = "androidx.appcompat:appcompat:1.7.0-alpha03"
     const val PLAY_SERVICES_AUTH = "com.google.android.gms:play-services-auth:20.7.0"
@@ -79,6 +80,12 @@ android {
 
     dependencies {
         //noinspection UseTomlInstead
+        implementation ("com.google.android.gms:play-services-basement:18.3.0")
+        //noinspection UseTomlInstead
+        implementation("androidx.fragment:fragment-ktx:1.6.2")
+        //noinspection UseTomlInstead
+        implementation("androidx.activity:activity-ktx:1.8.2")
+        //noinspection UseTomlInstead
         implementation ("com.google.code.gson:gson:2.10.1")
         //noinspection UseTomlInstead
         implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
@@ -114,5 +121,7 @@ android {
         androidTestImplementation(libs.androidx.ui.test.junit4)
         debugImplementation(libs.androidx.ui.tooling)
         debugImplementation(libs.androidx.ui.test.manifest)
+        //noinspection UseTomlInstead
+        debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.13")
     }
 }
