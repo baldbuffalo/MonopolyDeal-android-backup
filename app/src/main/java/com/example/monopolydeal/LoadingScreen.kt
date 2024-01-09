@@ -35,31 +35,23 @@ class LoadingScreen : AppCompatActivity() {
         // Check if the user is signed in
         val currentUser = FirebaseAuth.getInstance().currentUser
 
-        if (currentUser != null) {
-            // User is signed in, proceed to MainMenu directly
-            navigateToMainMenu()
+        // Determine the next activity based on the presence of the current user
+        val nextActivity = if (currentUser != null) {
+            // If the user is signed in, go to MainActivity
+            MainActivity::class.java
         } else {
-            // User is not signed in, show the loading screen and check for updates
-            setContentView(R.layout.activity_loading)
-            showLoadingScreen()
+            // If the user is not signed in, go to MainMenu
+            MainMenu::class.java
         }
-    }
 
-    private fun navigateToMainMenu() {
-        val activity = weakReference.get()
-        if (activity != null) {
-            val currentUser = FirebaseAuth.getInstance().currentUser
+        // Create an Intent to start the next activity
+        val intent = Intent(this, nextActivity)
 
-            val nextActivity = if (currentUser != null) {
-                MainActivity::class.java
-            } else {
-                MainMenu::class.java
-            }
+        // Start the next activity
+        startActivity(intent)
 
-            val intent = Intent(activity, nextActivity)
-            activity.startActivity(intent)
-            activity.finish()
-        }
+        // Finish the current activity
+        finish()
     }
 
     private fun showLoadingScreen() {
@@ -253,25 +245,36 @@ class LoadingScreen : AppCompatActivity() {
             val query = DownloadManager.Query().setFilterById(downloadId)
             val handler = Handler(Looper.getMainLooper())
 
-            val pollRunnable = object : Runnable {
-                override fun run() {
-                    val cursor = downloadManager.query(query)
-                    if (cursor.moveToFirst()) {
-                        val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                        if (columnIndex != -1) {
-                            val status = cursor.getInt(columnIndex)
-                            when (status) {
-                                DownloadManager.STATUS_SUCCESSFUL -> installApk(cursor)
-                                DownloadManager.STATUS_FAILED -> (activity as? LoadingScreen)?.finish()
-                                else -> handler.postDelayed(this, 1000)
+            lateinit var pollRunnable: Runnable
+            var runnableReference = WeakReference<Runnable>(null)
+
+            pollRunnable = Runnable {
+                val outerThis = this@LoadingScreen // Capture the outer class reference
+                val cursor = downloadManager.query(query)
+
+                if (cursor.moveToFirst()) {
+                    val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                    if (columnIndex != -1) {
+                        val status = cursor.getInt(columnIndex)
+                        when (status) {
+                            DownloadManager.STATUS_SUCCESSFUL -> installApk(cursor)
+                            DownloadManager.STATUS_FAILED -> (outerThis as? LoadingScreen)?.finish()
+                            else -> {
+                                val runnable = runnableReference.get()
+                                if (runnable != null) {
+                                    handler.postDelayed(runnable, 1000)
+                                }
                             }
-                        } else {
-                            (activity as? LoadingScreen)?.finish()
                         }
+                    } else {
+                        (outerThis as? LoadingScreen)?.finish()
                     }
-                    cursor.close()
                 }
+                cursor.close()
             }
+
+            // Now, it's a var, and we can assign a new value to it
+            runnableReference = WeakReference(pollRunnable)
 
             handler.postDelayed(pollRunnable, 1000)
         }
