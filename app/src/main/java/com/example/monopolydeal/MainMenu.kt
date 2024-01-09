@@ -82,12 +82,19 @@ class MainMenu : AppCompatActivity() {
     }
 
     private fun navigateToMainActivity(account: GoogleSignInAccount) {
+        // Set a flag indicating that the user is signed in
+        val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+        preferences.edit().putBoolean("isSignedIn", true).apply()
+
+        // Print a message indicating the switch
+        println("Switching to MainActivity")
+
         // Start the MainActivity
         val intent = Intent(this, MainActivity::class.java)
         intent.putExtra("googleIdToken", account.idToken)
         startActivity(intent)
 
-        // Finish the current activity if needed
+        // Finish the current activity (MainMenu)
         finish()
     }
 }

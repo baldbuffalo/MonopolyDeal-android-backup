@@ -52,13 +52,14 @@ class MainActivity : AppCompatActivity() {
         currentUser = auth.currentUser
 
         if (currentUser == null) {
-            // User is not signed in, navigate to MainMenu
-            navigateToMainMenu()
+            // User is not signed in, handle it as needed
+            showToast("User is not signed in")
         } else {
             // User is signed in, proceed with the rest of the initialization
             initializeFirebaseComponents()
         }
     }
+
 
     private fun initializeFirebaseComponents() {
         // Optionally, you can start MainActivity directly after a successful sign-in
@@ -111,6 +112,7 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToMainMenu() {
         val intent = Intent(this, MainMenu::class.java)
         startActivity(intent)
+        println("Switching to MainMenu Activity")
         finish() // Close the current activity
     }
 

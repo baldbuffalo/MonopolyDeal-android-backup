@@ -7,20 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.*
-import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
-import com.google.android.gms.common.api.Status
+import com.google.firebase.auth.FirebaseAuth
 import org.json.JSONArray
 import org.json.JSONException
 import java.io.BufferedReader
@@ -36,71 +27,39 @@ class LoadingScreen : AppCompatActivity() {
     private val executor = Executors.newSingleThreadExecutor()
     private val githubApiUrl = "https://api.github.com/repos/baldbuffalo/MonopolyDeal-android-backup/releases"
 
-    private lateinit var googleSignInClient: GoogleSignInClient
-    private lateinit var startForResultLauncher: ActivityResultLauncher<Intent>
     private val weakReference = WeakReference(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_loading)
 
-        configureGoogleSignIn()
-        startForResultLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                onActivityResult(result.resultCode, result.data)
-            }
+        // Check if the user is signed in
+        val currentUser = FirebaseAuth.getInstance().currentUser
 
-        showLoadingScreen()
-    }
-
-    private fun configureGoogleSignIn() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.google_web_client_id))
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
-    }
-
-    private fun onActivityResult(resultCode: Int, data: Intent?) {
-        if (resultCode == RESULT_OK) {
-            handleSignInResult(data)
+        if (currentUser != null) {
+            // User is signed in, proceed to MainMenu directly
+            navigateToMainMenu()
         } else {
-            handleSignInCancel()
+            // User is not signed in, show the loading screen and check for updates
+            setContentView(R.layout.activity_loading)
+            showLoadingScreen()
         }
     }
 
-    private fun createApiException(statusCode: Int): ApiException {
-        val status = Status(statusCode)
-        return ApiException(status)
-    }
+    private fun navigateToMainMenu() {
+        val activity = weakReference.get()
+        if (activity != null) {
+            val currentUser = FirebaseAuth.getInstance().currentUser
 
-    private fun handleSignInResult(data: Intent?) {
-        val accountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
-        try {
-            val account = accountTask.getResult(ApiException::class.java)
-            if (account != null) {
-                navigateToMainActivity(account)
+            val nextActivity = if (currentUser != null) {
+                MainActivity::class.java
             } else {
-                handleSignInFailure(createApiException(CommonStatusCodes.INTERNAL_ERROR))
+                MainMenu::class.java
             }
-        } catch (e: ApiException) {
-            handleSignInFailure(createApiException(e.statusCode))
-        }
-    }
 
-    private fun handleSignInCancel() {
-        Log.w("GoogleSignIn", "Sign-in process canceled or user signed out")
-        navigateToNextScreen()
-    }
-
-    private fun handleSignInFailure(exception: ApiException) {
-        if (exception.statusCode == CommonStatusCodes.INTERNAL_ERROR) {
-            Log.e("SignInFailure", "Google sign-in failed: Internal Error")
-        } else {
-            Log.e("SignInFailure", "Google sign-in failed: ${exception.statusCode}, ${exception.message}")
+            val intent = Intent(activity, nextActivity)
+            activity.startActivity(intent)
+            activity.finish()
         }
-        navigateToNextScreen()
     }
 
     private fun showLoadingScreen() {
@@ -110,17 +69,12 @@ class LoadingScreen : AppCompatActivity() {
         progressBar.max = 100
         progressText.text = getString(R.string.checking_for_updates)
 
+        // Execute the background task to check for updates
         executor.execute {
             val latestTag = getLatestGitHubReleaseTag(githubApiUrl)
 
             runOnUiThread {
                 handleGitHubRelease(latestTag, progressText)
-
-                if (GoogleSignIn.getLastSignedInAccount(this) != null) {
-                    navigateToMainActivity(GoogleSignIn.getLastSignedInAccount(this)!!)
-                } else {
-                    navigateToNextScreen()
-                }
             }
         }
     }
@@ -132,11 +86,11 @@ class LoadingScreen : AppCompatActivity() {
                 showUpdatePrompt(githubApiUrl)
             } else {
                 progressText.text = getString(R.string.app_up_to_date)
-                navigateToNextScreen() // Directly navigate without delay
+                finish() // Directly finish without delay
             }
         } else {
             progressText.text = getString(R.string.checking_for_updates_error)
-            navigateToNextScreen() // Directly navigate without delay
+            finish() // Directly finish without delay
         }
     }
 
@@ -163,26 +117,6 @@ class LoadingScreen : AppCompatActivity() {
         if (activity != null) {
             UpdatePromptDialogFragment.newInstance(apiUrl)
                 .show(activity.supportFragmentManager, "update_prompt")
-        }
-    }
-
-    private fun navigateToMainActivity(account: GoogleSignInAccount) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.putExtra("googleIdToken", account.idToken)
-        startActivity(intent)
-        finish()
-    }
-
-    private fun navigateToNextScreen() {
-        val activity = weakReference.get()
-        if (activity != null) {
-            val nextActivity =
-                if (GoogleSignIn.getLastSignedInAccount(activity) != null) MainActivity::class.java
-                else MainMenu::class.java
-
-            val intent = Intent(activity, nextActivity)
-            activity.startActivity(intent)
-            activity.finish()
         }
     }
 
@@ -328,11 +262,11 @@ class LoadingScreen : AppCompatActivity() {
                             val status = cursor.getInt(columnIndex)
                             when (status) {
                                 DownloadManager.STATUS_SUCCESSFUL -> installApk(cursor)
-                                DownloadManager.STATUS_FAILED -> (activity as? LoadingScreen)?.navigateToNextScreen()
+                                DownloadManager.STATUS_FAILED -> (activity as? LoadingScreen)?.finish()
                                 else -> handler.postDelayed(this, 1000)
                             }
                         } else {
-                            (activity as? LoadingScreen)?.navigateToNextScreen()
+                            (activity as? LoadingScreen)?.finish()
                         }
                     }
                     cursor.close()
