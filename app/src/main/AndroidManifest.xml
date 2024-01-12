@@ -16,13 +16,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning">
+        android:configChanges="orientation|screenSize">
 
         <!-- Define LoadingScreen as the launcher activity -->
         <activity
             android:name=".LoadingScreen"
             android:exported="true"
-            android:theme="@style/LoadingTheme">
+            android:screenOrientation="landscape"
+            android:theme="@style/LoadingTheme"
+            tools:ignore="DiscouragedApi">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,16 +36,17 @@
         <activity
             android:name=".MainMenu"
             android:exported="true"
-            android:screenOrientation="fullSensor"
-            android:theme="@style/AppTheme"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi">
         </activity>
 
         <!-- Define MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/AppTheme">
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme"
+            tools:ignore="DiscouragedApi">
         </activity>
 
     </application>

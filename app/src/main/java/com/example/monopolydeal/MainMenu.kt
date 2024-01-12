@@ -3,8 +3,8 @@ package com.example.monopolydeal
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -22,14 +22,27 @@ class MainMenu : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check if the user is already signed in
+        val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+        val isSignedIn = preferences.getBoolean("isSignedIn", false)
+
+        if (isSignedIn) {
+            // User is already signed in, go to MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+
+        // Continue with the rest of the initialization if the user is not signed in
+
         setContentView(R.layout.main_menu)
 
         // Initialize buttons
-        val exitButton: Button = findViewById(R.id.exitButton)
         googleSignInButton = findViewById(R.id.googleSignInButton)
 
         // Set click listeners
-        exitButton.setOnClickListener { exitApp() }
         googleSignInButton.setOnClickListener { signInWithGoogle() }
 
         configureGoogleSignIn()
@@ -44,6 +57,7 @@ class MainMenu : AppCompatActivity() {
                 } else {
                     // User canceled the sign-in process or signed out
                     Log.w("GoogleSignIn", "Sign-in process canceled or user signed out")
+                    showNotLoggedInToast()
                 }
             }
     }
@@ -63,11 +77,6 @@ class MainMenu : AppCompatActivity() {
         startForResultLauncher.launch(signInIntent)
     }
 
-    private fun exitApp() {
-        // Add any cleanup logic if needed
-        finish()
-    }
-
     private fun handleSignInResult(data: Intent) {
         val signInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {
@@ -78,6 +87,7 @@ class MainMenu : AppCompatActivity() {
             // Handle sign-in failure
             Log.e("SignInFailure", "Google sign-in failed: ${e.statusCode}")
             // Show failure dialog or take appropriate action
+            showNotLoggedInToast()
         }
     }
 
@@ -96,5 +106,10 @@ class MainMenu : AppCompatActivity() {
 
         // Finish the current activity (MainMenu)
         finish()
+    }
+
+    private fun showNotLoggedInToast() {
+        // Display a toast message indicating that the user is not logged in
+        Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show()
     }
 }

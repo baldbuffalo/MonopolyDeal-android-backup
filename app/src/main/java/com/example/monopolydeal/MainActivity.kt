@@ -6,7 +6,6 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.PopupMenu
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.monopolydeal.databinding.ActivityMainBinding
@@ -31,6 +30,7 @@ class MainActivity : AppCompatActivity() {
 
     private val friendsList = mutableListOf<String>()
     private var isActivityDestroyed = false
+    private var guestCount = 1
 
     private val startForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -40,6 +40,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    private lateinit var authStateListener: FirebaseAuth.AuthStateListener
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -48,18 +50,20 @@ class MainActivity : AppCompatActivity() {
         // Initialize Firebase components
         auth = FirebaseAuth.getInstance()
 
-        // Check if the user is signed in
-        currentUser = auth.currentUser
-
-        if (currentUser == null) {
-            // User is not signed in, handle it as needed
-            showToast("User is not signed in")
-        } else {
-            // User is signed in, proceed with the rest of the initialization
-            initializeFirebaseComponents()
+        // Initialize AuthStateListener
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            currentUser = firebaseAuth.currentUser
+            if (currentUser == null) {
+                // User is not signed in, handle it as needed
+            } else {
+                // User is signed in, proceed with the rest of the initialization
+                initializeFirebaseComponents()
+            }
         }
-    }
 
+        // Register the AuthStateListener
+        auth.addAuthStateListener(authStateListener)
+    }
 
     private fun initializeFirebaseComponents() {
         // Optionally, you can start MainActivity directly after a successful sign-in
@@ -112,7 +116,6 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToMainMenu() {
         val intent = Intent(this, MainMenu::class.java)
         startActivity(intent)
-        println("Switching to MainMenu Activity")
         finish() // Close the current activity
     }
 
@@ -124,7 +127,6 @@ class MainActivity : AppCompatActivity() {
             firebaseAuthWithGoogle(account?.idToken)
         } catch (e: ApiException) {
             // Google Sign-In failed
-            showToast("Google Sign-In failed: ${e.message}")
         }
     }
 
@@ -135,12 +137,11 @@ class MainActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     currentUser = auth.currentUser
-                    showToast("Google Sign-In successful")
                     // Start MainActivity
                     startMainActivity()
+                    updateUsernameButton() // Make sure this function is defined
                 } else {
                     // If sign in fails, display a message to the user.
-                    showToast("Authentication failed: ${task.exception?.message}")
                 }
             }
     }
@@ -151,23 +152,14 @@ class MainActivity : AppCompatActivity() {
         finish() // Close the current activity
     }
 
-
-    private fun showToast(message: String) {
-        if (!isActivityDestroyed) {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
     private fun signOut() {
         auth.signOut()
-        showToast("Signed out")
         navigateToMainMenu()
     }
 
     private fun drawCard() {
         // Add logic to handle drawing a card
         val drawnCard = game.drawCard()
-        showToast("Drew a ${drawnCard.type} with value ${drawnCard.value}")
     }
 
     private fun playCard() {
@@ -178,15 +170,8 @@ class MainActivity : AppCompatActivity() {
         if (cardToPlay != null) {
             // Call the playCard function with the selected card
             val success = game.playCard(cardToPlay)
-
-            // Display a message based on whether the card was played successfully
-            if (success) {
-                showToast("Played a ${cardToPlay.type} with value ${cardToPlay.value}")
-            } else {
-                showToast("Could not play the selected card")
-            }
         } else {
-            showToast("No cards in the player's hand to play")
+            // No cards in the player's hand to play
         }
     }
 
@@ -194,14 +179,27 @@ class MainActivity : AppCompatActivity() {
         updateUsernameButton()
 
         binding.usernameButton.setOnClickListener {
-            // Handle click on the username button
-            showToast("Username button clicked")
-        }
-    }
+            // Create a PopupMenu
+            val popupMenu = PopupMenu(this, binding.usernameButton)
 
-    private fun updateUsernameButton() {
-        val username = currentUser?.displayName ?: "Guest"
-        binding.usernameButton.text = username
+            // Inflate the menu resource
+            popupMenu.menuInflater.inflate(R.menu.username_menu, popupMenu.menu)
+
+            // Set the item click listener
+            popupMenu.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.logout -> {
+                        signOut()
+                        true
+                    }
+                    // Add more menu items as needed
+                    else -> false
+                }
+            }
+
+            // Show the PopupMenu
+            popupMenu.show()
+        }
     }
 
     private fun setUpFriendButton() {
@@ -216,15 +214,24 @@ class MainActivity : AppCompatActivity() {
         if (::friendsRef.isInitialized) {
             val newFriend = "Friend ${friendsList.size + 1}"
             friendsRef.child(newFriend).setValue(true) // Add friend to Firebase Realtime Database
-            showToast("$newFriend added to friends list")
-        } else {
-            showToast("Friends list not initialized. Please sign in first.")
         }
+    }
+
+    private fun updateUsernameButton() {
+        val buttonText = if (currentUser == null) {
+            "Guest $guestCount"
+        } else {
+            currentUser?.displayName ?: "Guest $guestCount"
+        }
+
+        binding.usernameButton.text = buttonText
     }
 
     override fun onDestroy() {
         isActivityDestroyed = true
         // Release Firebase resources if needed
+        auth.removeAuthStateListener(authStateListener)
         super.onDestroy()
     }
 }
+

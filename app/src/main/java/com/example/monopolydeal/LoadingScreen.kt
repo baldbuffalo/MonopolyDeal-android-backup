@@ -13,7 +13,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import org.json.JSONArray
-import org.json.JSONException
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -21,36 +20,32 @@ import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
+import org.json.JSONException
 
 class LoadingScreen : AppCompatActivity() {
 
     private val executor = Executors.newSingleThreadExecutor()
     private val githubApiUrl = "https://api.github.com/repos/baldbuffalo/MonopolyDeal-android-backup/releases"
-
     private val weakReference = WeakReference(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_loading) // Set your loading screen layout
 
-        // Check if the user is signed in
-        val currentUser = FirebaseAuth.getInstance().currentUser
-
-        // Determine the next activity based on the presence of the current user
-        val nextActivity = if (currentUser != null) {
-            // If the user is signed in, go to MainActivity
-            MainActivity::class.java
+        // Check authentication state directly in onCreate
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            // User is signed in, navigate to MainActivity
+            startMainActivity()
         } else {
-            // If the user is not signed in, go to MainMenu
-            MainMenu::class.java
+            // User is not signed in, show loading screen and check for updates
+            showLoadingScreen()
         }
+    }
 
-        // Create an Intent to start the next activity
-        val intent = Intent(this, nextActivity)
-
-        // Start the next activity
+    private fun startMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
-
-        // Finish the current activity
         finish()
     }
 
@@ -59,30 +54,58 @@ class LoadingScreen : AppCompatActivity() {
         val progressText = findViewById<TextView>(R.id.progressText)
         progressBar.visibility = View.VISIBLE
         progressBar.max = 100
-        progressText.text = getString(R.string.checking_for_updates)
 
-        // Execute the background task to check for updates
         executor.execute {
+            // Check for updates
             val latestTag = getLatestGitHubReleaseTag(githubApiUrl)
 
             runOnUiThread {
-                handleGitHubRelease(latestTag, progressText)
+                handleGitHubRelease(latestTag, progressBar, progressText)
             }
         }
     }
 
-    private fun handleGitHubRelease(latestTag: String?, progressText: TextView) {
+    private fun handleGitHubRelease(latestTag: String?, progressBar: ProgressBar, progressText: TextView) {
         if (latestTag != null) {
             val currentVersion = packageManager.getPackageInfo(packageName, 0).versionName
             if (compareVersions(currentVersion, latestTag) < 0) {
                 showUpdatePrompt(githubApiUrl)
             } else {
-                progressText.text = getString(R.string.app_up_to_date)
-                finish() // Directly finish without delay
+                // Update progress bar and text to indicate completion
+                progressBar.progress = 0
+                progressText.text = getString(R.string.loading)
+
+                // Simulate delay for a smooth transition
+                Handler(Looper.getMainLooper()).postDelayed({
+                    progressBar.visibility = View.GONE
+
+                    // Check authentication state after progress bar completes
+                    checkAuthenticationState()
+                }, 1000) // Adjust the delay as needed
             }
         } else {
+            // Update progress bar and text to indicate error
+            progressBar.progress = 0
             progressText.text = getString(R.string.checking_for_updates_error)
-            finish() // Directly finish without delay
+
+            // Simulate delay for a smooth transition
+            Handler(Looper.getMainLooper()).postDelayed({
+                progressBar.visibility = View.GONE
+                finish() // Directly finish without delay
+            }, 1000) // Adjust the delay as needed
+        }
+    }
+
+    private fun checkAuthenticationState() {
+        // Check authentication state directly
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            // User is not signed in, navigate to MainMenu
+            startActivity(Intent(this, MainMenu::class.java))
+            finish()
+        } else {
+            // User is signed in, navigate to MainActivity
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
         }
     }
 
