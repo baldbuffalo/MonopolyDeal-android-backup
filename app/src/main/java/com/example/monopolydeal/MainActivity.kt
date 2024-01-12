@@ -3,16 +3,11 @@ package com.example.monopolydeal
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.widget.PopupMenu
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.monopolydeal.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -63,6 +58,8 @@ class MainActivity : AppCompatActivity() {
 
         // Register the AuthStateListener
         auth.addAuthStateListener(authStateListener)
+        // Explicitly call setUpUsernameButton here
+        setUpUsernameButton()
     }
 
     private fun initializeFirebaseComponents() {
@@ -75,48 +72,25 @@ class MainActivity : AppCompatActivity() {
         // Example: Set up button click listeners
         binding.drawCardButton.setOnClickListener { drawCard() }
         binding.playCardButton.setOnClickListener { playCard() }
-        setUpUsernameButton()
+        binding.playButton.setOnClickListener { startMonopolyDealGame() }
+
+        // Call updateUsernameButton here
+        updateUsernameButton()
         setUpFriendButton()
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.username_menu, menu)
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.logout -> {
-                showOptionsMenu()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun showOptionsMenu() {
-        val popupMenu = PopupMenu(this, binding.usernameButton)
-        val inflater: MenuInflater = popupMenu.menuInflater
-        inflater.inflate(R.menu.username_menu, popupMenu.menu)
-
-        popupMenu.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.logout -> {
-                    signOut()
-                    true
-                }
-                // Add more menu items as needed
-                else -> false
-            }
-        }
-
-        popupMenu.show()
-    }
-
     private fun navigateToMainMenu() {
-        val intent = Intent(this, MainMenu::class.java)
-        startActivity(intent)
-        finish() // Close the current activity
+        if (javaClass != MainMenu::class.java) {
+            val intent = Intent(this, MainMenu::class.java)
+            startActivity(intent)
+            finishAffinity() // Close all activities in the task
+        }
     }
 
     private fun handleGoogleSignInResult(data: Intent?) {
@@ -140,7 +114,9 @@ class MainActivity : AppCompatActivity() {
                     currentUser = auth.currentUser
                     // Start MainActivity
                     startMainActivity()
-                    updateUsernameButton() // Make sure this function is defined
+
+                    // Call updateUsernameButton here
+                    updateUsernameButton()
                 } else {
                     // If sign in fails, display a message to the user.
                 }
@@ -148,14 +124,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
+        // Use a flag to determine whether to start MainMenu or MainActivity
+        val intentClass = if (currentUser == null) {
+            MainMenu::class.java
+        } else {
+            MainActivity::class.java
+        }
+
+        val intent = Intent(this, intentClass)
         startActivity(intent)
         finish() // Close the current activity
     }
 
-    private fun signOut() {
-        auth.signOut()
-        navigateToMainMenu()
+    private val LOGOUT_REQUEST_CODE = 123
+
+    private fun logout() {
+        // Use FirebaseAuth to sign out the current user
+        FirebaseAuth.getInstance().signOut()
+
+        // Reset currentUser to null
+        currentUser = null
+
+        // Update UI
+        updateUsernameButton()
+
+        // Show LoadingScreen activity
+        val loadingIntent = Intent(this, LoadingScreen::class.java)
+        loadingIntent.putExtra("logoutFlag", true)
+        startActivity(loadingIntent)
+
+        // Finish the current activity
+        finish()
     }
 
     private fun drawCard() {
@@ -165,8 +164,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun playCard() {
         // Implement logic to get the card to play (for example, from the player's hand)
-        val playerHand = game.getPlayerHand()
-        val cardToPlay: Card? = playerHand.firstOrNull() // Placeholder, replace with actual logic
+        val playerHand = game.getPlayerHands()
+        val cardToPlay: List<Card>? = playerHand.firstOrNull() // Placeholder, replace with actual logic
 
         if (cardToPlay != null) {
             // Call the playCard function with the selected card
@@ -190,7 +189,7 @@ class MainActivity : AppCompatActivity() {
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.logout -> {
-                        signOut()
+                        logout()
                         true
                     }
                     // Add more menu items as needed
@@ -219,13 +218,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateUsernameButton() {
-        val buttonText = if (currentUser == null) {
-            "Guest $guestCount"
-        } else {
-            currentUser?.displayName ?: "Guest $guestCount"
-        }
-
+        val buttonText = currentUser?.displayName ?: "Guest $guestCount"
         binding.usernameButton.text = buttonText
+    }
+
+    private fun startMonopolyDealGame() {
+        // Add code to start MonopolyDealGame logic directly here
+        // For example, you can use methods from the MonopolyDealGame class
+        // to initiate and handle the game logic.
     }
 
     override fun onDestroy() {
@@ -235,4 +235,3 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 }
-

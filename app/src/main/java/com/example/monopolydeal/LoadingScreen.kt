@@ -1,6 +1,7 @@
 package com.example.monopolydeal
 
 import android.app.AlertDialog
+import android.util.Log
 import android.app.DownloadManager
 import androidx.fragment.app.DialogFragment
 import android.content.Context
@@ -32,14 +33,32 @@ class LoadingScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loading) // Set your loading screen layout
 
-        // Check authentication state directly in onCreate
-        if (FirebaseAuth.getInstance().currentUser != null) {
-            // User is signed in, navigate to MainActivity
-            startMainActivity()
-        } else {
-            // User is not signed in, show loading screen and check for updates
-            showLoadingScreen()
+        // Check for the logoutFlag in the Intent
+        val logoutFlag = intent.getBooleanExtra("logoutFlag", false)
+
+        if (logoutFlag) {
+            // If logoutFlag is true, go to MainMenu
+            navigateToMainMenu()
+            return
         }
+
+            // Continue with the normal flow
+
+            // Check authentication state directly in onCreate
+            if (FirebaseAuth.getInstance().currentUser != null) {
+                // User is signed in, navigate to MainActivity
+                finish()
+            } else {
+                // User is not signed in, show loading screen and check for updates
+                showLoadingScreen()
+            }
+        }
+
+    private fun navigateToMainMenu() {
+        Log.d("LoadingScreenActivity", "Navigating to MainMenu")
+        val intent = Intent(this, MainMenu::class.java)
+        startActivity(intent)
+        finish() // Close the current activity
     }
 
     private fun startMainActivity() {
@@ -65,48 +84,84 @@ class LoadingScreen : AppCompatActivity() {
         }
     }
 
+    private fun navigateToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish() // Close the current activity
+    }
+
+    // Function to handle GitHub release
     private fun handleGitHubRelease(latestTag: String?, progressBar: ProgressBar, progressText: TextView) {
         if (latestTag != null) {
+            val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+
+            // Check sign-in status
+            val isSignedIn = preferences.getBoolean("isSignedIn", false)
+
             val currentVersion = packageManager.getPackageInfo(packageName, 0).versionName
+
             if (compareVersions(currentVersion, latestTag) < 0) {
+                // Show update prompt
                 showUpdatePrompt(githubApiUrl)
+
+                // Save the latest GitHub release tag in SharedPreferences
+                preferences.edit().putString("latestGitHubRelease", latestTag).apply()
             } else {
                 // Update progress bar and text to indicate completion
                 progressBar.progress = 0
                 progressText.text = getString(R.string.loading)
 
-                // Simulate delay for a smooth transition
-                Handler(Looper.getMainLooper()).postDelayed({
-                    progressBar.visibility = View.GONE
+                // Hide progress bar immediately
+                progressBar.visibility = View.GONE
 
-                    // Check authentication state after progress bar completes
-                    checkAuthenticationState()
-                }, 1000) // Adjust the delay as needed
+                // Check authentication state after progress bar completes
+                if (isSignedIn) {
+                    navigateToMainActivity()
+                } else {
+                    navigateToMainMenu()
+                }
             }
         } else {
             // Update progress bar and text to indicate error
             progressBar.progress = 0
             progressText.text = getString(R.string.checking_for_updates_error)
 
-            // Simulate delay for a smooth transition
-            Handler(Looper.getMainLooper()).postDelayed({
-                progressBar.visibility = View.GONE
-                finish() // Directly finish without delay
-            }, 1000) // Adjust the delay as needed
+            // Show error message and check sign-in status
+            showAlertDialog("Error checking for updates. Continue with the normal flow?") { confirmed ->
+                if (confirmed) {
+                    // Continue with the normal flow
+
+                    // Check sign-in status after showing the alert
+                    val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+                    val isSignedIn = preferences.getBoolean("isSignedIn", false)
+
+                    if (isSignedIn) {
+                        // User is signed in, handle accordingly
+                    } else {
+                        // User is not signed in, handle accordingly
+                    }
+
+                    // Continue with the normal flow
+                    progressBar.visibility = View.GONE
+                } else {
+                    // Handle the case where the user did not confirm
+                    // You might want to show an additional message or take another action
+                }
+            }
+
+            // Hide progress bar immediately
+            progressBar.visibility = View.GONE
         }
     }
 
-    private fun checkAuthenticationState() {
-        // Check authentication state directly
-        if (FirebaseAuth.getInstance().currentUser == null) {
-            // User is not signed in, navigate to MainMenu
-            startActivity(Intent(this, MainMenu::class.java))
-            finish()
-        } else {
-            // User is signed in, navigate to MainActivity
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        }
+
+    // Function to show an alert dialog
+    private fun showAlertDialog(message: String, onConfirmation: (Boolean) -> Unit) {
+        AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton("Yes") { _, _ -> onConfirmation(true) }
+            .setNegativeButton("No") { _, _ -> onConfirmation(false) }
+            .show()
     }
 
     private fun showCustomPopup(message: String) {

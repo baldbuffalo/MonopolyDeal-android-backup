@@ -24,4 +24,5 @@
     <string name="new_version_available_message">A new version of the app is available. Do you want to download it?</string>
     <string name="app_updating">Updating…</string>
     <string name="checking_for_updates_error">Error checking for updates</string>
+    <string name="play">Play</string>
 </resources>

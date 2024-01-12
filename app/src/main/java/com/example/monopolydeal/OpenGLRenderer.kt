@@ -1,48 +1,22 @@
-package com.example.monopolydeal
+// OpenGLCardRenderer.kt
+package com.example.monopolydeal.com.example.monopolydeal
 
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
+import com.example.monopolydeal.Card
+import com.example.monopolydeal.MonopolyDealGame
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-data class Card(val type: String, val value: Int)
+class OpenGLCardRenderer(private val context: Context, monopolyDealGame: MonopolyDealGame) : GLSurfaceView.Renderer {
 
-class MonopolyDealGame {
-    private val playerHands = mutableListOf<List<Card>>()
-
-    init {
-        // Sample initialization with two players
-        playerHands.add(listOf(Card("Property", 100), Card("Action", 50)))
-        playerHands.add(listOf(Card("Money", 200), Card("Property", 150)))
-    }
-
-    fun getPlayerHands(): List<List<Card>> {
-        // Return the player hands
-        return playerHands.toList()
-    }
-
-    fun drawCard() {
-        // Implement drawCard logic
-    }
-
-    fun playCard(cardToPlay: List<Card>?): Boolean {
-        // Implement playCard logic
-        return false
-    }
-
-    // Add more game logic as needed
-}
-
-class OpenGLCardRenderer(private val context: Context, monopolyDealGame: MonopolyDealGame) :
-    GLSurfaceView.Renderer {
-
-    private var cards: List<Card> = monopolyDealGame.getPlayerHands().flatten()
+    private lateinit var card: Card
 
     private val mvpMatrix = FloatArray(16)
     private val rotationMatrix = FloatArray(16)
@@ -69,28 +43,19 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
                 "}"
 
     init {
-        // Assuming a simple layout for the cards
-        val cardWidth = 0.1f
-        val cardHeight = 0.15f
+        card = Card("Property", 100)
 
-        val cardVertices = mutableListOf<Float>()
+        val squareCoords = floatArrayOf(
+            -0.5f, 0.5f, 0.0f,
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            0.5f, 0.5f, 0.0f
+        )
 
-        cards.forEachIndexed { index, _ ->
-            val xOffset = index * (cardWidth + 0.02f) // Adjust the spacing between cards
-            cardVertices.addAll(
-                listOf(
-                    -cardWidth / 2 + xOffset, cardHeight / 2, 0.0f,
-                    -cardWidth / 2 + xOffset, -cardHeight / 2, 0.0f,
-                    cardWidth / 2 + xOffset, -cardHeight / 2, 0.0f,
-                    cardWidth / 2 + xOffset, cardHeight / 2, 0.0f
-                )
-            )
-        }
-
-        val bb = ByteBuffer.allocateDirect(cardVertices.size * 4)
+        val bb = ByteBuffer.allocateDirect(squareCoords.size * 4)
         bb.order(ByteOrder.nativeOrder())
         vertexBuffer = bb.asFloatBuffer()
-        vertexBuffer.put(cardVertices.toFloatArray())
+        vertexBuffer.put(squareCoords)
         vertexBuffer.position(0)
     }
 
@@ -130,7 +95,7 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
 
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, cards.size * 4)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4)
 
         GLES20.glDisableVertexAttribArray(positionHandle)
     }
