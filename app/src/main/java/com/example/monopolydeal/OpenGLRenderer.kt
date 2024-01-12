@@ -1,22 +1,20 @@
-// OpenGLCardRenderer.kt
-package com.example.monopolydeal.com.example.monopolydeal
+package com.example.monopolydeal
 
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
-import com.example.monopolydeal.Card
-import com.example.monopolydeal.MonopolyDealGame
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class OpenGLCardRenderer(private val context: Context, monopolyDealGame: MonopolyDealGame) : GLSurfaceView.Renderer {
+class OpenGLCardRendere(private val context: Context, monopolyDealGame: MonopolyDealGame) :
+    GLSurfaceView.Renderer {
 
-    private lateinit var card: Card
+    private var cards: List<Card> = monopolyDealGame.getPlayerHands().flatten()
 
     private val mvpMatrix = FloatArray(16)
     private val rotationMatrix = FloatArray(16)
@@ -43,19 +41,29 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
                 "}"
 
     init {
-        card = Card("Property", 100)
+        // Assuming a simple layout for the cards
+        val cardWidth = 0.1f
+        val cardHeight = 0.15f
+        val yOffset = -1.0f // Adjust the vertical position of the cards
 
-        val squareCoords = floatArrayOf(
-            -0.5f, 0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.5f, 0.5f, 0.0f
-        )
+        val cardVertices = mutableListOf<Float>()
 
-        val bb = ByteBuffer.allocateDirect(squareCoords.size * 4)
+        cards.take(5).forEachIndexed { index, _ ->
+            val xOffset = index * (cardWidth + 0.02f) // Adjust the spacing between cards
+            cardVertices.addAll(
+                listOf(
+                    -cardWidth / 2 + xOffset, cardHeight / 2 + yOffset, 0.0f,
+                    -cardWidth / 2 + xOffset, -cardHeight / 2 + yOffset, 0.0f,
+                    cardWidth / 2 + xOffset, -cardHeight / 2 + yOffset, 0.0f,
+                    cardWidth / 2 + xOffset, cardHeight / 2 + yOffset, 0.0f
+                )
+            )
+        }
+
+        val bb = ByteBuffer.allocateDirect(cardVertices.size * 4)
         bb.order(ByteOrder.nativeOrder())
         vertexBuffer = bb.asFloatBuffer()
-        vertexBuffer.put(squareCoords)
+        vertexBuffer.put(cardVertices.toFloatArray())
         vertexBuffer.position(0)
     }
 

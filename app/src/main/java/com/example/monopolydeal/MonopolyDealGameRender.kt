@@ -3,7 +3,6 @@ package com.example.monopolydeal
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.monopolydeal.com.example.monopolydeal.OpenGLCardRenderer
 
 class MonopolyDealGameActivity : AppCompatActivity() {
 
