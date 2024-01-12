@@ -125,3 +125,7 @@ android {
         debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.13")
     }
 }
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    androidTestImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+}
