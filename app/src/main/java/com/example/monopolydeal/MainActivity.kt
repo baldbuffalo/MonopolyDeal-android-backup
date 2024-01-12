@@ -125,6 +125,7 @@ class MainActivity : AppCompatActivity() {
             val account =
                 GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)
             firebaseAuthWithGoogle(account?.idToken)
+            guestCount++ // Increment guest count
         } catch (e: ApiException) {
             // Google Sign-In failed
         }
