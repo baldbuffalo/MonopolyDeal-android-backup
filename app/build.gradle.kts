@@ -79,6 +79,7 @@ android {
     }
 
     dependencies {
+        implementation ("com.android.support:cardview-v7:28.0.0")
         //noinspection UseTomlInstead
         implementation ("com.google.android.gms:play-services-basement:18.3.0")
         //noinspection UseTomlInstead

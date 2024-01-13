@@ -223,8 +223,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMonopolyDealGame() {
-        // Add code to start MonopolyDealGame logic directly here
-        // For example, you can use methods from the MonopolyDealGame class
+        // Add code to start com.example.monopolydeal.MonopolyDealGame logic directly here
+        // For example, you can use methods from the com.example.monopolydeal.MonopolyDealGame class
         // to initiate and handle the game logic.
     }
 

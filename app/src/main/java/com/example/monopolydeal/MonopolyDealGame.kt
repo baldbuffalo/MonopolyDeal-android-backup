@@ -1,8 +1,9 @@
 package com.example.monopolydeal
 
+
 import android.content.Context
+import android.graphics.Bitmap
 import android.opengl.GLES20
-import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
 import java.nio.ByteBuffer
@@ -10,8 +11,8 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import android.opengl.GLSurfaceView
 
-data class Card(val type: String, val value: Int)
 
 class MonopolyDealGame {
     private val playerHands = mutableListOf<List<Card>>()
@@ -35,8 +36,6 @@ class MonopolyDealGame {
         // Implement playCard logic
         return false
     }
-
-    // Add more game logic as needed
 }
 
 class OpenGLCardRenderer(private val context: Context, monopolyDealGame: MonopolyDealGame) :
@@ -51,21 +50,30 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
 
     private var positionHandle: Int = 0
     private var mvpMatrixHandle: Int = 0
+    private var textureHandle: Int = 0
+    private var textureCoordinateHandle: Int = 0
 
-    private val vertexBuffer: FloatBuffer
+    private lateinit var textureBitmap: Bitmap
+    private lateinit var textureBuffer: FloatBuffer
+
+    private lateinit var vertexBuffer: FloatBuffer
 
     private val vertexShaderCode =
         "attribute vec4 vPosition;" +
+                "attribute vec2 aTextureCoord;" +
                 "uniform mat4 uMVPMatrix;" +
+                "varying vec2 vTextureCoord;" +
                 "void main() {" +
                 "  gl_Position = uMVPMatrix * vPosition;" +
+                "  vTextureCoord = aTextureCoord;" +
                 "}"
 
     private val fragmentShaderCode =
         "precision mediump float;" +
-                "uniform vec4 vColor;" +
+                "uniform sampler2D uTexture;" +
+                "varying vec2 vTextureCoord;" +
                 "void main() {" +
-                "  gl_FragColor = vColor;" +
+                "  gl_FragColor = texture2D(uTexture, vTextureCoord);" +
                 "}"
 
     init {
@@ -74,6 +82,7 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
         val cardHeight = 0.15f
 
         val cardVertices = mutableListOf<Float>()
+        val textureCoordinates = mutableListOf<Float>()
 
         cards.forEachIndexed { index, _ ->
             val xOffset = index * (cardWidth + 0.02f) // Adjust the spacing between cards
@@ -85,6 +94,15 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
                     cardWidth / 2 + xOffset, cardHeight / 2, 0.0f
                 )
             )
+
+            textureCoordinates.addAll(
+                listOf(
+                    0.0f, 1.0f,
+                    0.0f, 0.0f,
+                    1.0f, 0.0f,
+                    1.0f, 1.0f
+                )
+            )
         }
 
         val bb = ByteBuffer.allocateDirect(cardVertices.size * 4)
@@ -92,6 +110,12 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
         vertexBuffer = bb.asFloatBuffer()
         vertexBuffer.put(cardVertices.toFloatArray())
         vertexBuffer.position(0)
+
+        val textureBufferByte = ByteBuffer.allocateDirect(textureCoordinates.size * 4)
+        textureBufferByte.order(ByteOrder.nativeOrder())
+        textureBuffer = textureBufferByte.asFloatBuffer()
+        textureBuffer.put(textureCoordinates.toFloatArray())
+        textureBuffer.position(0)
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
@@ -107,6 +131,8 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
 
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition")
         mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
+        textureHandle = GLES20.glGetUniformLocation(program, "uTexture")
+        textureCoordinateHandle = GLES20.glGetAttribLocation(program, "aTextureCoord")
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -125,14 +151,26 @@ class OpenGLCardRenderer(private val context: Context, monopolyDealGame: Monopol
             GLES20.GL_FLOAT, false,
             12, vertexBuffer
         )
-
         GLES20.glEnableVertexAttribArray(positionHandle)
 
+        GLES20.glVertexAttribPointer(
+            textureCoordinateHandle, 2,
+            GLES20.GL_FLOAT, false,
+            0, textureBuffer
+        )
+        GLES20.glEnableVertexAttribArray(textureCoordinateHandle)
+
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
+
+        // Bind the texture
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle)
+        GLES20.glUniform1i(textureHandle, 0)
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, cards.size * 4)
 
         GLES20.glDisableVertexAttribArray(positionHandle)
+        GLES20.glDisableVertexAttribArray(textureCoordinateHandle)
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
