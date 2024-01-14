@@ -14,7 +14,6 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.database.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,11 +22,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private var currentUser: FirebaseUser? = null
-    private lateinit var friendsRef: DatabaseReference
-
-    private val friendsList = mutableListOf<String>()
-    private var isActivityDestroyed = false
-    private var guestCount = 1
 
     private val startForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -82,7 +76,6 @@ class MainActivity : AppCompatActivity() {
 
         // Call updateUsernameButton here
         updateUsernameButton()
-        setUpFriendButton()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -104,7 +97,6 @@ class MainActivity : AppCompatActivity() {
             val account =
                 GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)
             firebaseAuthWithGoogle(account?.idToken)
-            guestCount++ // Increment guest count
         } catch (e: ApiException) {
             // Google Sign-In failed
         }
@@ -207,29 +199,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setUpFriendButton() {
-        binding.addFriendButton.setOnClickListener {
-            // Add a friend to the list
-            addFriend()
-        }
-
-        // Open FriendsActivity on Friends button click
-        binding.friendList.setOnClickListener {
-            val intent = Intent(this, FriendsActivity::class.java)
-            startActivity(intent)
-        }
-    }
-
-    private fun addFriend() {
-        // Check if friendsRef is initialized
-        if (::friendsRef.isInitialized) {
-            val newFriend = "Friend ${friendsList.size + 1}"
-            friendsRef.child(newFriend).setValue(true) // Add friend to Firebase Realtime Database
-        }
-    }
-
     private fun updateUsernameButton() {
-        val buttonText = currentUser?.displayName ?: "Guest $guestCount"
+        val buttonText = currentUser?.displayName ?: "Guest"
         binding.usernameButton.text = buttonText
     }
 
@@ -245,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         applyButtonStyles(binding.playCardButton)
         applyButtonStyles(binding.playButton)
         applyUsernameButtonStyles(binding.usernameButton)
-        applyFriendButtonStyles(binding.addFriendButton)
         // Add more styling as needed
     }
 
@@ -269,14 +239,7 @@ class MainActivity : AppCompatActivity() {
         // Add additional styles as needed
     }
 
-    private fun applyFriendButtonStyles(button: Button) {
-        // Apply custom styles to the add friend button
-        applyButtonStyles(button)
-        // Add additional styles as needed
-    }
-
     override fun onDestroy() {
-        isActivityDestroyed = true
         // Release Firebase resources if needed
         auth.removeAuthStateListener(authStateListener)
         super.onDestroy()
