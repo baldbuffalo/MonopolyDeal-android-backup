@@ -11,4 +11,7 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorAccent">#FF3F51B5</color>
     <color name="dark_green">#006400</color>
+    <dimen name="button_padding_horizontal">16dp</dimen>
+    <dimen name="button_padding_vertical">8dp</dimen>
+    <dimen name="rounded_button_background">8dp</dimen>
 </resources>

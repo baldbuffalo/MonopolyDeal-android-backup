@@ -3,9 +3,11 @@ package com.example.monopolydeal
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
+import android.widget.Button
 import android.widget.PopupMenu
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.monopolydeal.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
@@ -58,8 +60,12 @@ class MainActivity : AppCompatActivity() {
 
         // Register the AuthStateListener
         auth.addAuthStateListener(authStateListener)
+
         // Explicitly call setUpUsernameButton here
         setUpUsernameButton()
+
+        // Apply fancy styles
+        applyFancyStyles()
     }
 
     private fun initializeFirebaseComponents() {
@@ -78,7 +84,6 @@ class MainActivity : AppCompatActivity() {
         updateUsernameButton()
         setUpFriendButton()
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.username_menu, menu)
@@ -136,7 +141,7 @@ class MainActivity : AppCompatActivity() {
         finish() // Close the current activity
     }
 
-    private val LOGOUT_REQUEST_CODE = 123
+    private val logoutRequestCode = 123
 
     private fun logout() {
         // Use FirebaseAuth to sign out the current user
@@ -207,6 +212,12 @@ class MainActivity : AppCompatActivity() {
             // Add a friend to the list
             addFriend()
         }
+
+        // Open FriendsActivity on Friends button click
+        binding.friendList.setOnClickListener {
+            val intent = Intent(this, FriendsActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun addFriend() {
@@ -223,9 +234,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMonopolyDealGame() {
-        // Add code to start com.example.monopolydeal.MonopolyDealGame logic directly here
-        // For example, you can use methods from the com.example.monopolydeal.MonopolyDealGame class
-        // to initiate and handle the game logic.
+        // Start MonopolyDealGame activity
+        val intent = Intent(this, MonopolyDealGame::class.java)
+        startActivity(intent)
+    }
+
+    private fun applyFancyStyles() {
+        // Apply custom styles to enhance the UI
+        applyButtonStyles(binding.drawCardButton)
+        applyButtonStyles(binding.playCardButton)
+        applyButtonStyles(binding.playButton)
+        applyUsernameButtonStyles(binding.usernameButton)
+        applyFriendButtonStyles(binding.addFriendButton)
+        // Add more styling as needed
+    }
+
+    private fun applyButtonStyles(button: Button) {
+        // Apply custom styles to buttons
+        val context = button.context
+        val resources = context.resources
+
+        button.setTextColor(ContextCompat.getColor(context, R.color.white))
+        button.setPadding(
+            resources.getDimensionPixelSize(R.dimen.button_padding_horizontal),
+            resources.getDimensionPixelSize(R.dimen.button_padding_vertical),
+            resources.getDimensionPixelSize(R.dimen.button_padding_horizontal),
+            resources.getDimensionPixelSize(R.dimen.button_padding_vertical)
+        )
+    }
+
+    private fun applyUsernameButtonStyles(button: Button) {
+        // Apply custom styles to the username button
+        applyButtonStyles(button)
+        // Add additional styles as needed
+    }
+
+    private fun applyFriendButtonStyles(button: Button) {
+        // Apply custom styles to the add friend button
+        applyButtonStyles(button)
+        // Add additional styles as needed
     }
 
     override fun onDestroy() {

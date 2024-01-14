@@ -40,6 +40,13 @@
             android:text="@string/play_card"
             style="?android:attr/buttonBarButtonStyle"/>
 
+        <Button
+            android:id="@+id/friendList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/friends_list"
+            android:layout_marginTop="16dp"/>
+
         <!-- Add more buttons for other actions as needed -->
 
     </LinearLayout>

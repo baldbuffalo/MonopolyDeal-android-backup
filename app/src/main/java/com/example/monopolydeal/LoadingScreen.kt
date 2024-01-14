@@ -1,9 +1,7 @@
 package com.example.monopolydeal
 
 import android.app.AlertDialog
-import android.util.Log
 import android.app.DownloadManager
-import androidx.fragment.app.DialogFragment
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,6 +10,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 import com.google.firebase.auth.FirebaseAuth
 import org.json.JSONArray
 import java.io.BufferedReader
@@ -28,6 +27,8 @@ class LoadingScreen : AppCompatActivity() {
     private val executor = Executors.newSingleThreadExecutor()
     private val githubApiUrl = "https://api.github.com/repos/baldbuffalo/MonopolyDeal-android-backup/releases"
     private val weakReference = WeakReference(this)
+    private lateinit var progressBar: ProgressBar
+    private lateinit var progressText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,20 +43,19 @@ class LoadingScreen : AppCompatActivity() {
             return
         }
 
-            // Continue with the normal flow
+        // Continue with the normal flow
 
-            // Check authentication state directly in onCreate
-            if (FirebaseAuth.getInstance().currentUser != null) {
-                // User is signed in, navigate to MainActivity
-                finish()
-            } else {
-                // User is not signed in, show loading screen and check for updates
-                showLoadingScreen()
-            }
+        // Check authentication state directly in onCreate
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            // User is signed in, navigate to MainActivity
+            finish()
+        } else {
+            // User is not signed in, show loading screen and check for updates
+            showLoadingScreen()
         }
+    }
 
     private fun navigateToMainMenu() {
-        Log.d("LoadingScreenActivity", "Navigating to MainMenu")
         val intent = Intent(this, MainMenu::class.java)
         startActivity(intent)
         finish() // Close the current activity
@@ -69,8 +69,8 @@ class LoadingScreen : AppCompatActivity() {
     }
 
     private fun showLoadingScreen() {
-        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
-        val progressText = findViewById<TextView>(R.id.progressText)
+        progressBar = findViewById(R.id.progressBar)
+        progressText = findViewById(R.id.progressText)
         progressBar.visibility = View.VISIBLE
         progressBar.max = 100
 
@@ -79,7 +79,7 @@ class LoadingScreen : AppCompatActivity() {
             val latestTag = getLatestGitHubReleaseTag(githubApiUrl)
 
             runOnUiThread {
-                handleGitHubRelease(latestTag, progressBar, progressText)
+                handleGitHubRelease(latestTag)
             }
         }
     }
@@ -90,8 +90,7 @@ class LoadingScreen : AppCompatActivity() {
         finish() // Close the current activity
     }
 
-    // Function to handle GitHub release
-    private fun handleGitHubRelease(latestTag: String?, progressBar: ProgressBar, progressText: TextView) {
+    private fun handleGitHubRelease(latestTag: String?) {
         if (latestTag != null) {
             val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
 
@@ -127,40 +126,35 @@ class LoadingScreen : AppCompatActivity() {
             progressText.text = getString(R.string.checking_for_updates_error)
 
             // Show error message and check sign-in status
-            showAlertDialog("Error checking for updates. Continue with the normal flow?") { confirmed ->
-                if (confirmed) {
-                    // Continue with the normal flow
-
-                    // Check sign-in status after showing the alert
-                    val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
-                    val isSignedIn = preferences.getBoolean("isSignedIn", false)
-
-                    if (isSignedIn) {
-                        // User is signed in, handle accordingly
-                    } else {
-                        // User is not signed in, handle accordingly
-                    }
-
-                    // Continue with the normal flow
-                    progressBar.visibility = View.GONE
-                } else {
-                    // Handle the case where the user did not confirm
-                    // You might want to show an additional message or take another action
-                }
-            }
+            showAlertDialog("Error checking for updates. Continue with the normal flow?")
 
             // Hide progress bar immediately
             progressBar.visibility = View.GONE
         }
     }
 
-
     // Function to show an alert dialog
-    private fun showAlertDialog(message: String, onConfirmation: (Boolean) -> Unit) {
+    private fun showAlertDialog(message: String) {
         AlertDialog.Builder(this)
             .setMessage(message)
-            .setPositiveButton("Yes") { _, _ -> onConfirmation(true) }
-            .setNegativeButton("No") { _, _ -> onConfirmation(false) }
+            .setPositiveButton("OK") { _, _ ->
+                // Continue with the normal flow
+
+                // Check sign-in status after showing the alert
+                val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+                val isSignedIn = preferences.getBoolean("isSignedIn", false)
+
+                if (isSignedIn) {
+                    // User is signed in, handle accordingly
+                    navigateToMainActivity()
+                } else {
+                    // User is not signed in, handle accordingly
+                    navigateToMainMenu()
+                }
+
+                // Continue with the normal flow
+                progressBar.visibility = View.GONE
+            }
             .show()
     }
 
