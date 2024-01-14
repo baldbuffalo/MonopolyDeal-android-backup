@@ -1,6 +1,7 @@
 // FriendsActivity.kt
 package com.example.monopolydeal
 
+import android.R
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
@@ -47,7 +48,7 @@ class FriendsActivity : AppCompatActivity() {
                 // Display friends in the ListView
                 val adapter = ArrayAdapter(
                     this@FriendsActivity,
-                    android.R.layout.simple_list_item_1,
+                    R.layout.simple_list_item_1,
                     friendsList
                 )
                 binding.friendsListView.adapter = adapter
