@@ -210,6 +210,12 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun showFriendsList() {
+        // Create an Intent to start FriendsActivity
+        val intent = Intent(this, FriendsActivity::class.java)
+        startActivity(intent)
+    }
+
     private fun applyFancyStyles() {
         // Apply custom styles to enhance the UI
         applyButtonStyles(binding.drawCardButton)

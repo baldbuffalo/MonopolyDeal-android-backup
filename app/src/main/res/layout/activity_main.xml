@@ -19,14 +19,6 @@
         style="?android:attr/buttonBarStyle">
 
         <Button
-            android:id="@+id/addFriendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/add_friend"
-            style="?android:attr/buttonBarButtonStyle" />
-
-        <Button
             android:id="@+id/drawCardButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -42,6 +34,7 @@
 
         <Button
             android:id="@+id/friendList"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/friends_list"

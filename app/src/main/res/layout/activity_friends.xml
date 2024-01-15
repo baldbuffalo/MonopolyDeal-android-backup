@@ -10,4 +10,12 @@
         android:text="@string/friends_list"
         android:layout_marginTop="16dp"/>
 
+    <ListView
+        android:id="@+id/friendsListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/friendList"
+        android:layout_marginTop="16dp"
+        android:divider="@android:color/darker_gray"
+        android:dividerHeight="1dp"/>
 </RelativeLayout>
