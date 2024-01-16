@@ -3,6 +3,7 @@ package com.example.monopolydeal
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import com.example.monopolydeal.databinding.ActivityFriendsBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -17,8 +18,10 @@ class FriendsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityFriendsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_friends)
+
+        // Set the lifecycle owner for the data binding
+        binding.lifecycleOwner = this
 
         // Initialize Firebase components
         auth = FirebaseAuth.getInstance()

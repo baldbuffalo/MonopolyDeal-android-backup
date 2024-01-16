@@ -16,6 +16,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        dataBinding = true
     }
 
     namespace = "com.example.monopolydeal"
@@ -70,7 +71,9 @@ android {
             excludes += "xsd/catalog.xml"
             excludes += "META-INF/DEPENDENCIES"
             excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
             excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/notice.md"
             excludes += "META-INF/io.netty.versions.properties"
             excludes += "META-INF/INDEX.LIST"
         }

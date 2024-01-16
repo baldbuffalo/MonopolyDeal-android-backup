@@ -25,6 +25,6 @@
     <string name="app_updating">Updating…</string>
     <string name="checking_for_updates_error">Error checking for updates</string>
     <string name="play">Play</string>
-    <string name="friend_list">Friend List</string>
-    <string name="friends_list">Friends List</string>
+    <string name="friends_list">Friend List</string>
+    <string name="friends">Friends List</string>
 </resources>

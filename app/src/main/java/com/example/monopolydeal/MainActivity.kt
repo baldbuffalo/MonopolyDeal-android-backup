@@ -74,6 +74,9 @@ class MainActivity : AppCompatActivity() {
         binding.playCardButton.setOnClickListener { playCard() }
         binding.playButton.setOnClickListener { startMonopolyDealGame() }
 
+        // Add click listener for the Friends button
+        binding.friendsButton.setOnClickListener { showFriendsList() }
+
         // Call updateUsernameButton here
         updateUsernameButton()
     }

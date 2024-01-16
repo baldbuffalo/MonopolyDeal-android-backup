@@ -56,9 +56,8 @@
 
         </activity>
         <activity
-            android:name=".FriendsActivity"
-            android:screenOrientation="landscape">
+            android:name=".FriendsActivity">
         </activity>
     </application>
-
+    
 </manifest>
