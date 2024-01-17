@@ -6,15 +6,11 @@ import android.view.Menu
 import android.widget.Button
 import android.widget.PopupMenu
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.monopolydeal.databinding.ActivityMainBinding
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private var currentUser: FirebaseUser? = null
 
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
+    private var isLoggingOut: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         // Initialize AuthStateListener
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             currentUser = firebaseAuth.currentUser
-            if (currentUser == null) {
+            if (currentUser == null && !isLoggingOut) {
                 // User is not signed in, handle it as needed
                 // Show a toast indicating successful logout
                 Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
@@ -90,35 +87,6 @@ class MainActivity : AppCompatActivity() {
         finishAffinity() // Close all activities in the task
     }
 
-    private fun handleGoogleSignInResult(data: Intent?) {
-        try {
-            // Google Sign-In was successful, authenticate with Firebase
-            val account =
-                GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)
-            firebaseAuthWithGoogle(account?.idToken)
-        } catch (e: ApiException) {
-            // Google Sign-In failed
-        }
-    }
-
-    private fun firebaseAuthWithGoogle(idToken: String?) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    currentUser = auth.currentUser
-                    // Start MainActivity
-                    startMainActivity()
-
-                    // Call updateUsernameButton here
-                    updateUsernameButton()
-                } else {
-                    // If sign in fails, display a message to the user.
-                }
-            }
-    }
-
     private fun startMainActivity() {
         // Use a flag to determine whether to start MainMenu or MainActivity
         val intentClass = if (currentUser == null) {
@@ -139,15 +107,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun logout() {
+        // Set the flag to true before signing out
+        isLoggingOut = true
+
         // Use FirebaseAuth to sign out the current user
         FirebaseAuth.getInstance().signOut()
-        // AuthStateListener will handle UI updates and navigation
+
+        // Finish the current activity
+        finish()
     }
 
     private fun drawCard() {
         // Assuming the drawCard function in MonopolyDealGame takes a playerIndex parameter
         val playerIndex = 0 // Specify the desired player index
         val drawnCard = game.drawCard(playerIndex)
+        // Implement drawCard logic as needed
     }
 
     private fun playCard() {
@@ -162,6 +136,7 @@ class MainActivity : AppCompatActivity() {
 
             // Call the playCard function with both playerIndex and cardIndex
             val success = game.playCard(playerIndex, cardIndex)
+            // Implement playCard logic as needed
         } else {
             // No cards in the player's hand to play
         }
