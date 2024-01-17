@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.widget.Button
 import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -23,14 +24,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private var currentUser: FirebaseUser? = null
 
-    private val startForResult =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                // Handle the result of the Google Sign-In
-                handleGoogleSignInResult(result.data)
-            }
-        }
-
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +39,11 @@ class MainActivity : AppCompatActivity() {
             currentUser = firebaseAuth.currentUser
             if (currentUser == null) {
                 // User is not signed in, handle it as needed
+                // Show a toast indicating successful logout
+                Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
+
+                // Navigate to the main menu and clear the back stack
+                navigateToMainMenu()
             } else {
                 // User is signed in, proceed with the rest of the initialization
                 initializeFirebaseComponents()
@@ -87,11 +85,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToMainMenu() {
-        if (javaClass != MainMenu::class.java) {
-            val intent = Intent(this, MainMenu::class.java)
-            startActivity(intent)
-            finishAffinity() // Close all activities in the task
-        }
+        val intent = Intent(this, MainMenu::class.java)
+        startActivity(intent)
+        finishAffinity() // Close all activities in the task
     }
 
     private fun handleGoogleSignInResult(data: Intent?) {
@@ -132,34 +128,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         val intent = Intent(this, intentClass)
+
+        // Clear the back stack so that pressing back after logging out doesn't return to the MainActivity
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+
         startActivity(intent)
-        finish() // Close the current activity
-    }
-
-    private val logoutRequestCode = 123
-
-    private fun logout() {
-        // Use FirebaseAuth to sign out the current user
-        FirebaseAuth.getInstance().signOut()
-
-        // Reset currentUser to null
-        currentUser = null
-
-        // Update UI
-        updateUsernameButton()
-
-        // Show LoadingScreen activity
-        val loadingIntent = Intent(this, LoadingScreen::class.java)
-        loadingIntent.putExtra("logoutFlag", true)
-        startActivity(loadingIntent)
 
         // Finish the current activity
         finish()
     }
 
+    private fun logout() {
+        // Use FirebaseAuth to sign out the current user
+        FirebaseAuth.getInstance().signOut()
+        // AuthStateListener will handle UI updates and navigation
+    }
+
     private fun drawCard() {
-        // Add logic to handle drawing a card
-        val drawnCard = game.drawCard()
+        // Assuming the drawCard function in MonopolyDealGame takes a playerIndex parameter
+        val playerIndex = 0 // Specify the desired player index
+        val drawnCard = game.drawCard(playerIndex)
     }
 
     private fun playCard() {
@@ -168,8 +156,12 @@ class MainActivity : AppCompatActivity() {
         val cardToPlay: List<Card>? = playerHand.firstOrNull() // Placeholder, replace with actual logic
 
         if (cardToPlay != null) {
-            // Call the playCard function with the selected card
-            val success = game.playCard(cardToPlay)
+            // Specify the playerIndex and cardIndex you want to play (e.g., 0 for the first player and 0 for the first card)
+            val playerIndex = 0
+            val cardIndex = 0
+
+            // Call the playCard function with both playerIndex and cardIndex
+            val success = game.playCard(playerIndex, cardIndex)
         } else {
             // No cards in the player's hand to play
         }
@@ -217,6 +209,9 @@ class MainActivity : AppCompatActivity() {
         // Create an Intent to start FriendsActivity
         val intent = Intent(this, FriendsActivity::class.java)
         startActivity(intent)
+
+        // Finish the current activity (MainActivity)
+        finish()
     }
 
     private fun applyFancyStyles() {
@@ -249,7 +244,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Release Firebase resources if needed
+        // Remove the AuthStateListener when the activity is destroyed
         auth.removeAuthStateListener(authStateListener)
         super.onDestroy()
     }

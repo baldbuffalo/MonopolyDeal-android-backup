@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -28,10 +27,8 @@ class MainMenu : AppCompatActivity() {
         val isSignedIn = preferences.getBoolean("isSignedIn", false)
 
         if (isSignedIn) {
-            // User is already signed in, go to MainActivity
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+            // User is already signed in, no need to show the main menu, go to MainActivity directly
+            navigateToMainActivity()
             return
         }
 
@@ -57,7 +54,6 @@ class MainMenu : AppCompatActivity() {
                 } else {
                     // User canceled the sign-in process or signed out
                     Log.w("GoogleSignIn", "Sign-in process canceled or user signed out")
-                    showNotLoggedInToast()
                 }
             }
     }
@@ -86,12 +82,10 @@ class MainMenu : AppCompatActivity() {
         } catch (e: ApiException) {
             // Handle sign-in failure
             Log.e("SignInFailure", "Google sign-in failed: ${e.statusCode}")
-            // Show failure dialog or take appropriate action
-            showNotLoggedInToast()
         }
     }
 
-    private fun navigateToMainActivity(account: GoogleSignInAccount) {
+    private fun navigateToMainActivity(account: GoogleSignInAccount? = null) {
         // Set a flag indicating that the user is signed in
         val preferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
         preferences.edit().putBoolean("isSignedIn", true).apply()
@@ -101,15 +95,10 @@ class MainMenu : AppCompatActivity() {
 
         // Start the MainActivity
         val intent = Intent(this, MainActivity::class.java)
-        intent.putExtra("googleIdToken", account.idToken)
+        account?.let { intent.putExtra("googleIdToken", it.idToken) }
         startActivity(intent)
 
         // Finish the current activity (MainMenu)
         finish()
-    }
-
-    private fun showNotLoggedInToast() {
-        // Display a toast message indicating that the user is not logged in
-        Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show()
     }
 }

@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <!-- Define variables here if needed -->
+        <variable
+            name="viewModel"
+            type="com.example.monopolydeal.FriendsViewModel" />
     </data>
 
     <RelativeLayout
