@@ -2,6 +2,7 @@ package com.example.monopolydeal
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.widget.Button
 import android.widget.PopupMenu
@@ -29,32 +30,32 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Initialize Firebase components
+        initializeAuth()
+
+        // Set up UI components, click listeners, and styles
+        initializeUI()
+    }
+
+    private fun initializeAuth() {
         auth = FirebaseAuth.getInstance()
 
-        // Initialize AuthStateListener
+        // Check initial authentication state
+        currentUser = auth.currentUser
+        if (currentUser == null) {
+            navigateToMainMenu()
+        } else {
+            initializeFirebaseComponents()
+        }
+
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             currentUser = firebaseAuth.currentUser
             if (currentUser == null && !isLoggingOut) {
-                // User is not signed in, handle it as needed
-                // Show a toast indicating successful logout
-                Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
-
-                // Navigate to the main menu and clear the back stack
                 navigateToMainMenu()
             } else {
-                // User is signed in, proceed with the rest of the initialization
                 initializeFirebaseComponents()
             }
         }
-
-        // Register the AuthStateListener
         auth.addAuthStateListener(authStateListener)
-
-        // Explicitly call setUpUsernameButton here
-        setUpUsernameButton()
-
-        // Apply fancy styles
-        applyFancyStyles()
     }
 
     private fun initializeFirebaseComponents() {
@@ -74,6 +75,12 @@ class MainActivity : AppCompatActivity() {
 
         // Call updateUsernameButton here
         updateUsernameButton()
+    }
+
+    private fun initializeUI() {
+        // Set up UI components, click listeners, and styles
+        setUpUsernameButton()
+        applyFancyStyles()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
