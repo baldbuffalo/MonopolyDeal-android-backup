@@ -101,18 +101,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        // Use a flag to determine whether to start MainMenu or MainActivity
+        // Determine the activity to start based on authentication state
         val intentClass = if (currentUser == null) {
             MainMenu::class.java
         } else {
             MainActivity::class.java
         }
 
+        // Create an intent to start the determined activity
         val intent = Intent(this, intentClass)
 
         // Clear the back stack so that pressing back after logging out doesn't return to the MainActivity
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
 
+        // Start the determined activity
         startActivity(intent)
 
         // Finish the current activity
