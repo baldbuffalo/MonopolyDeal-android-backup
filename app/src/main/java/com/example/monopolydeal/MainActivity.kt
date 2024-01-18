@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.Menu
 import android.widget.Button
 import android.widget.PopupMenu
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.monopolydeal.databinding.ActivityMainBinding
@@ -23,17 +22,18 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
     private var isLoggingOut: Boolean = false
+    private var isAuthStateListenerAttached: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize Firebase components
-        initializeAuth()
-
         // Set up UI components, click listeners, and styles
         initializeUI()
+
+        // Initialize Firebase components
+        initializeAuth()
     }
 
     private fun initializeAuth() {
@@ -47,15 +47,21 @@ class MainActivity : AppCompatActivity() {
             initializeFirebaseComponents()
         }
 
-        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-            currentUser = firebaseAuth.currentUser
-            if (currentUser == null && !isLoggingOut) {
-                navigateToMainMenu()
-            } else {
-                initializeFirebaseComponents()
+        // Attach authStateListener only if it's not already attached
+        if (!isAuthStateListenerAttached) {
+            authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+                currentUser = firebaseAuth.currentUser
+                if (currentUser == null && !isLoggingOut) {
+                    navigateToMainMenu()
+                } else {
+                    initializeFirebaseComponents()
+                }
             }
+            auth.addAuthStateListener(authStateListener)
+
+            // Set the flag to indicate that the listener is attached
+            isAuthStateListenerAttached = true
         }
-        auth.addAuthStateListener(authStateListener)
     }
 
     private fun initializeFirebaseComponents() {
