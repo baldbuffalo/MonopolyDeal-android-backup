@@ -2,91 +2,73 @@ package com.example.monopolydeal
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
-import android.widget.Button
 import android.widget.PopupMenu
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.example.monopolydeal.databinding.ActivityMainBinding
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.*
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var game: MonopolyDealGame
     private lateinit var binding: ActivityMainBinding
-
     private lateinit var auth: FirebaseAuth
     private var currentUser: FirebaseUser? = null
+    private lateinit var friendsRef: DatabaseReference
+    private val friendsList = mutableListOf<String>()
+    private var isActivityDestroyed = false
+    private var guestCount = 1
+
+    private val startForResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // Handle the result of the Google Sign-In
+                handleGoogleSignInResult(result.data)
+            }
+        }
 
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
-    private var isLoggingOut: Boolean = false
-    private var isAuthStateListenerAttached: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Set up UI components, click listeners, and styles
-        initializeUI()
-
         // Initialize Firebase components
-        initializeAuth()
-    }
-
-    private fun initializeAuth() {
         auth = FirebaseAuth.getInstance()
 
-        // Check initial authentication state
-        currentUser = auth.currentUser
-        if (currentUser == null) {
-            navigateToMainMenu()
-        } else {
-            initializeFirebaseComponents()
-        }
-
-        // Attach authStateListener only if it's not already attached
-        if (!isAuthStateListenerAttached) {
-            authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-                currentUser = firebaseAuth.currentUser
-                if (currentUser == null && !isLoggingOut) {
-                    navigateToMainMenu()
-                } else {
-                    initializeFirebaseComponents()
-                }
+        // Initialize AuthStateListener
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            currentUser = firebaseAuth.currentUser
+            if (currentUser == null) {
+                // User is not signed in, handle it as needed
+            } else {
+                // User is signed in, proceed with the rest of the initialization
+                initializeFirebaseComponents()
             }
-            auth.addAuthStateListener(authStateListener)
-
-            // Set the flag to indicate that the listener is attached
-            isAuthStateListenerAttached = true
         }
+
+        // Register the AuthStateListener
+        auth.addAuthStateListener(authStateListener)
+        // Explicitly call setUpUsernameButton here
+        setUpUsernameButton()
     }
 
     private fun initializeFirebaseComponents() {
         // Optionally, you can start MainActivity directly after a successful sign-in
         startMainActivity()
 
-        // Initialize Monopoly Deal game components
-        game = MonopolyDealGame()
-
         // Example: Set up button click listeners
-        binding.drawCardButton.setOnClickListener { drawCard() }
-        binding.playCardButton.setOnClickListener { playCard() }
         binding.playButton.setOnClickListener { startMonopolyDealGame() }
-
-        // Add click listener for the Friends button
-        binding.friendsButton.setOnClickListener { showFriendsList() }
 
         // Call updateUsernameButton here
         updateUsernameButton()
-    }
-
-    private fun initializeUI() {
-        // Set up UI components, click listeners, and styles
-        setUpUsernameButton()
-        applyFancyStyles()
+        setUpFriendButton()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -95,66 +77,75 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToMainMenu() {
-        val intent = Intent(this, MainMenu::class.java)
-        startActivity(intent)
-        finishAffinity() // Close all activities in the task
+        if (javaClass != MainMenu::class.java) {
+            val intent = Intent(this, MainMenu::class.java)
+            startActivity(intent)
+            finishAffinity() // Close all activities in the task
+        }
+    }
+
+    private fun handleGoogleSignInResult(data: Intent?) {
+        try {
+            // Google Sign-In was successful, authenticate with Firebase
+            val account =
+                GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)
+            firebaseAuthWithGoogle(account?.idToken)
+            guestCount++ // Increment guest count
+        } catch (e: ApiException) {
+            // Google Sign-In failed
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String?) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    currentUser = auth.currentUser
+                    // Start MainActivity
+                    startMainActivity()
+
+                    // Call updateUsernameButton here
+                    updateUsernameButton()
+                } else {
+                    // If sign in fails, display a message to the user.
+                }
+            }
     }
 
     private fun startMainActivity() {
-        // Determine the activity to start based on authentication state
+        // Use a flag to determine whether to start MainMenu or MainActivity
         val intentClass = if (currentUser == null) {
             MainMenu::class.java
         } else {
             MainActivity::class.java
         }
 
-        // Create an intent to start the determined activity
         val intent = Intent(this, intentClass)
-
-        // Clear the back stack so that pressing back after logging out doesn't return to the MainActivity
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-
-        // Start the determined activity
         startActivity(intent)
-
-        // Finish the current activity
-        finish()
+        finish() // Close the current activity
     }
 
-    private fun logout() {
-        // Set the flag to true before signing out
-        isLoggingOut = true
+    private val LOGOUT_REQUEST_CODE = 123
 
+    private fun logout() {
         // Use FirebaseAuth to sign out the current user
         FirebaseAuth.getInstance().signOut()
 
+        // Reset currentUser to null
+        currentUser = null
+
+        // Update UI
+        updateUsernameButton()
+
+        // Show LoadingScreen activity
+        val loadingIntent = Intent(this, LoadingScreen::class.java)
+        loadingIntent.putExtra("logoutFlag", true)
+        startActivity(loadingIntent)
+
         // Finish the current activity
         finish()
-    }
-
-    private fun drawCard() {
-        // Assuming the drawCard function in MonopolyDealGame takes a playerIndex parameter
-        val playerIndex = 0 // Specify the desired player index
-        val drawnCard = game.drawCard(playerIndex)
-        // Implement drawCard logic as needed
-    }
-
-    private fun playCard() {
-        // Implement logic to get the card to play (for example, from the player's hand)
-        val playerHand = game.getPlayerHands()
-        val cardToPlay: List<Card>? = playerHand.firstOrNull() // Placeholder, replace with actual logic
-
-        if (cardToPlay != null) {
-            // Specify the playerIndex and cardIndex you want to play (e.g., 0 for the first player and 0 for the first card)
-            val playerIndex = 0
-            val cardIndex = 0
-
-            // Call the playCard function with both playerIndex and cardIndex
-            val success = game.playCard(playerIndex, cardIndex)
-            // Implement playCard logic as needed
-        } else {
-            // No cards in the player's hand to play
-        }
     }
 
     private fun setUpUsernameButton() {
@@ -184,57 +175,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setUpFriendButton() {
+        binding.friendsButton.setOnClickListener {
+            // Add a friend to the list
+            addFriend()
+        }
+    }
+
+    private fun addFriend() {
+        // Check if friendsRef is initialized
+        if (::friendsRef.isInitialized) {
+            val newFriend = "Friend ${friendsList.size + 1}"
+            friendsRef.child(newFriend).setValue(true) // Add friend to Firebase Realtime Database
+        }
+    }
+
     private fun updateUsernameButton() {
-        val buttonText = currentUser?.displayName ?: "Guest"
+        val buttonText = currentUser?.displayName ?: "Guest $guestCount"
         binding.usernameButton.text = buttonText
     }
 
     private fun startMonopolyDealGame() {
-        // Start MonopolyDealGame activity
-        val intent = Intent(this, MonopolyDealGame::class.java)
-        startActivity(intent)
-    }
-
-    private fun showFriendsList() {
-        // Create an Intent to start FriendsActivity
-        val intent = Intent(this, FriendsActivity::class.java)
-        startActivity(intent)
-
-        // Finish the current activity (MainActivity)
-        finish()
-    }
-
-    private fun applyFancyStyles() {
-        // Apply custom styles to enhance the UI
-        applyButtonStyles(binding.drawCardButton)
-        applyButtonStyles(binding.playCardButton)
-        applyButtonStyles(binding.playButton)
-        applyUsernameButtonStyles(binding.usernameButton)
-        // Add more styling as needed
-    }
-
-    private fun applyButtonStyles(button: Button) {
-        // Apply custom styles to buttons
-        val context = button.context
-        val resources = context.resources
-
-        button.setTextColor(ContextCompat.getColor(context, R.color.white))
-        button.setPadding(
-            resources.getDimensionPixelSize(R.dimen.button_padding_horizontal),
-            resources.getDimensionPixelSize(R.dimen.button_padding_vertical),
-            resources.getDimensionPixelSize(R.dimen.button_padding_horizontal),
-            resources.getDimensionPixelSize(R.dimen.button_padding_vertical)
-        )
-    }
-
-    private fun applyUsernameButtonStyles(button: Button) {
-        // Apply custom styles to the username button
-        applyButtonStyles(button)
-        // Add additional styles as needed
+        // Add code to start MonopolyDealGame logic directly here
+        // For example, you can use methods from the MonopolyDealGame class
+        // to initiate and handle the game logic.
     }
 
     override fun onDestroy() {
-        // Remove the AuthStateListener when the activity is destroyed
+        isActivityDestroyed = true
+        // Release Firebase resources if needed
         auth.removeAuthStateListener(authStateListener)
         super.onDestroy()
     }
